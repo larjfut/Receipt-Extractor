@@ -1,10 +1,10 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import UploadPage from './pages/UploadPage.jsx';
-import ReviewPage from './pages/ReviewPage.jsx';
-import SignaturePage from './pages/SignaturePage.jsx';
-import SubmitPage from './pages/SubmitPage.jsx';
-import { ReceiptProvider } from './context/ReceiptContext.jsx';
+import React from "react"
+import { Routes, Route, Navigate } from "react-router-dom"
+import UploadPage from "./pages/UploadPage.jsx"
+import ReviewPage from "./pages/ReviewPage.jsx"
+import SignaturePage from "./pages/SignaturePage.jsx"
+import SubmitPage from "./pages/SubmitPage.jsx"
+import { ReceiptProvider } from "./context/ReceiptContext.jsx"
 
 export default function App() {
   return (
@@ -19,5 +19,5 @@ export default function App() {
         </Routes>
       </div>
     </ReceiptProvider>
-  );
+  )
 }

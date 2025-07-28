@@ -1,15 +1,15 @@
-const { ClientSecretCredential } = require('@azure/identity');
-const { Client } = require('@microsoft/microsoft-graph-client');
-require('isomorphic-fetch');
+const { ClientSecretCredential } = require("@azure/identity")
+const { Client } = require("@microsoft/microsoft-graph-client")
+require("isomorphic-fetch")
 
 // Read configuration from environment variables.  These values must be
 // provided by the operator to enable calls to Microsoft Graph.  When not
 // configured the client will operate in stub mode.
-const tenantId = process.env.TENANT_ID;
-const clientId = process.env.CLIENT_ID;
-const clientSecret = process.env.CLIENT_SECRET;
-const siteId = process.env.SITE_ID;
-const listId = process.env.LIST_ID;
+const tenantId = process.env.TENANT_ID
+const clientId = process.env.CLIENT_ID
+const clientSecret = process.env.CLIENT_SECRET
+const siteId = process.env.SITE_ID
+const listId = process.env.LIST_ID
 
 /**
  * Obtain an authenticated Microsoft Graph client using the client
@@ -19,17 +19,23 @@ const listId = process.env.LIST_ID;
  */
 function getGraphClient() {
   if (!tenantId || !clientId || !clientSecret) {
-    return null;
+    return null
   }
-  const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+  const credential = new ClientSecretCredential(
+    tenantId,
+    clientId,
+    clientSecret,
+  )
   return Client.initWithMiddleware({
     authProvider: {
       getAccessToken: async () => {
-        const token = await credential.getToken('https://graph.microsoft.com/.default');
-        return token.token;
+        const token = await credential.getToken(
+          "https://graph.microsoft.com/.default",
+        )
+        return token.token
       },
     },
-  });
+  })
 }
 
 /**
@@ -48,13 +54,15 @@ function getGraphClient() {
 async function createPurchaseRequisition(fields, attachments, signature) {
   // If Graph is not configured, just return a stub response.  This makes it
   // safe to develop the frontend without needing credentials.
-  const graph = getGraphClient();
+  const graph = getGraphClient()
   if (!graph || !siteId || !listId) {
-    console.log('SharePoint client not configured.  Skipping actual submission.');
-    console.log('Fields:', fields);
-    console.log('Attachments:', attachments);
-    console.log('Signature present:', Boolean(signature));
-    return { status: 'stub', message: 'SharePoint not configured' };
+    console.log(
+      "SharePoint client not configured.  Skipping actual submission.",
+    )
+    console.log("Fields:", fields)
+    console.log("Attachments:", attachments)
+    console.log("Signature present:", Boolean(signature))
+    return { status: "stub", message: "SharePoint not configured" }
   }
   // Build the fields payload for the list item.  SharePoint expects the
   // dictionary to be keyed by internal column names.  For this example we
@@ -62,12 +70,12 @@ async function createPurchaseRequisition(fields, attachments, signature) {
   // translated into internal names on the client.  See README for details.
   const itemPayload = {
     fields: { ...fields },
-  };
+  }
   try {
     // Create the list item
     const item = await graph
       .api(`/sites/${siteId}/lists/${listId}/items`)
-      .post(itemPayload);
+      .post(itemPayload)
     // Upload attachments if provided
     if (attachments && attachments.length > 0) {
       for (const file of attachments) {
@@ -76,17 +84,17 @@ async function createPurchaseRequisition(fields, attachments, signature) {
         await graph
           .api(`/sites/${siteId}/lists/${listId}/items/${item.id}/attachments`)
           .post({
-            '@microsoft.graph.downloadUrl': file.contentUrl,
-            'name': file.name,
-            'contentType': file.type,
-          });
+            "@microsoft.graph.downloadUrl": file.contentUrl,
+            name: file.name,
+            contentType: file.type,
+          })
       }
     }
-    return item;
+    return item
   } catch (err) {
-    console.error('Error creating SharePoint item:', err);
-    throw err;
+    console.error("Error creating SharePoint item:", err)
+    throw err
   }
 }
 
-module.exports = { createPurchaseRequisition };
+module.exports = { createPurchaseRequisition }

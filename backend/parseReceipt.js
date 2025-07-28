@@ -18,12 +18,12 @@
  *   strings (initially empty unless heuristics are added).
  */
 function parseReceiptData(tesseractData, mapping) {
-  const result = {};
+  const result = {}
   mapping.forEach((field) => {
-    result[field.stateKey] = '';
-  });
+    result[field.stateKey] = ""
+  })
   // TODO: implement real parsing of tesseractData.text here
-  return result;
+  return result
 }
 
-module.exports = { parseReceiptData };
+module.exports = { parseReceiptData }

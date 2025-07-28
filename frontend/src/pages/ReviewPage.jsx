@@ -1,25 +1,25 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { ReceiptContext } from '../context/ReceiptContext.jsx';
+import React, { useContext, useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import axios from "axios"
+import { ReceiptContext } from "../context/ReceiptContext.jsx"
 
 export default function ReviewPage() {
-  const { receipt, setReceipt } = useContext(ReceiptContext);
-  const [mapping, setMapping] = useState([]);
-  const navigate = useNavigate();
+  const { receipt, setReceipt } = useContext(ReceiptContext)
+  const [mapping, setMapping] = useState([])
+  const navigate = useNavigate()
 
   useEffect(() => {
     // Fetch field mapping from backend so the form knows which fields to display.
     async function loadMapping() {
       try {
-        const res = await axios.get('http://localhost:5000/api/fields');
-        setMapping(res.data);
+        const res = await axios.get("http://localhost:5000/api/fields")
+        setMapping(res.data)
       } catch (e) {
-        console.error('Failed to load field mapping', e);
+        console.error("Failed to load field mapping", e)
       }
     }
-    loadMapping();
-  }, []);
+    loadMapping()
+  }, [])
 
   const handleChange = (key, value) => {
     setReceipt((prev) => ({
@@ -28,12 +28,12 @@ export default function ReviewPage() {
         ...prev.fields,
         [key]: value,
       },
-    }));
-  };
+    }))
+  }
 
   const handleNext = () => {
-    navigate('/signature');
-  };
+    navigate("/signature")
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-8">
@@ -43,11 +43,11 @@ export default function ReviewPage() {
           <div key={field.stateKey} className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               {field.label}
-              {field.required ? ' *' : ''}
+              {field.required ? " *" : ""}
             </label>
             <input
               type="text"
-              value={receipt.fields[field.stateKey] || ''}
+              value={receipt.fields[field.stateKey] || ""}
               onChange={(e) => handleChange(field.stateKey, e.target.value)}
               className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
             />
@@ -62,5 +62,5 @@ export default function ReviewPage() {
         Continue to Signature
       </button>
     </div>
-  );
+  )
 }
