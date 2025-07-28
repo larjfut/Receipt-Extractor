@@ -20,6 +20,7 @@
 function parseReceiptData(tesseractData, mapping) {
   const result = {}
   mapping.forEach((field) => {
+
     result[field.stateKey] = ''
   })
 
@@ -73,7 +74,9 @@ function parseReceiptData(tesseractData, mapping) {
     if ('vendorTotal' in result) result.vendorTotal = val
   }
 
+
   return result
 }
 
-module.exports = { parseReceiptData };
+module.exports = { parseReceiptData }
+

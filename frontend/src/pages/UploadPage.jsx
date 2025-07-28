@@ -1,3 +1,4 @@
+
 import React, { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
@@ -7,18 +8,19 @@ import FileUpload from '../components/FileUpload.jsx'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export default function UploadPage() {
-  const { receipt, setReceipt } = useContext(ReceiptContext);
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { receipt, setReceipt } = useContext(ReceiptContext)
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const handleFileUpload = async (file) => {
-    setError(null);
-    setLoading(true);
+    setError(null)
+    setLoading(true)
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      const formData = new FormData()
+      formData.append("file", file)
       // Call backend OCR endpoint
+
       const resp = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
@@ -27,15 +29,15 @@ export default function UploadPage() {
         ...receipt,
         fields: resp.data.data || {},
         attachments: [file],
-      });
-      navigate('/review');
+      })
+      navigate("/review")
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || err.message);
+      console.error(err)
+      setError(err.response?.data?.error || err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-8">
@@ -44,5 +46,6 @@ export default function UploadPage() {
       {loading && <p className="mt-2 text-blue-600">Extracting data…</p>}
       {error && <p className="mt-2 text-red-600">{error}</p>}
     </div>
+
   );
 }
