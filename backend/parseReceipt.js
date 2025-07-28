@@ -20,9 +20,61 @@
 function parseReceiptData(tesseractData, mapping) {
   const result = {}
   mapping.forEach((field) => {
-    result[field.stateKey] = ""
+
+    result[field.stateKey] = ''
   })
-  // TODO: implement real parsing of tesseractData.text here
+
+  const text = tesseractData.text || ''
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+
+  const datePatterns = [
+    /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/,
+    /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/
+  ]
+  for (const r of datePatterns) {
+    const m = text.match(r)
+    if (m) {
+      const year = r === datePatterns[0] ? m[3] : m[1]
+      const month = r === datePatterns[0] ? m[1] : m[2]
+      const day = r === datePatterns[0] ? m[2] : m[3]
+      const normalized = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+      result['purchases[0].date'] = normalized
+      break
+    }
+  }
+
+  for (const line of lines) {
+    if (!/[0-9]/.test(line) && line.length && line.length < 40) {
+      result['purchases[0].vendor'] = line
+      break
+    }
+  }
+
+  const clean = (s) => s.replace(/[,$]/g, '').trim()
+
+  const subMatch = text.match(/subtotal[^0-9]{0,10}([\d.,]+)/i)
+  if (subMatch) {
+    const val = clean(subMatch[1])
+    result['purchases[0].subtotal'] = val
+    if ('subtotalP' in result) result.subtotalP = val
+  }
+
+  const taxMatch = text.match(/(?:sales\s*)?tax[^0-9]{0,10}([\d.,]+)/i)
+  if (taxMatch) {
+    const val = clean(taxMatch[1])
+    result['purchases[0].tax'] = val
+    if ('taxTotal' in result) result.taxTotal = val
+  }
+
+  const totalMatch = text.match(/(?:grand\s*)?total[^0-9]{0,10}([\d.,]+)/i)
+  if (totalMatch) {
+    const val = clean(totalMatch[1])
+    result['purchases[0].total'] = val
+    if ('grandTotal' in result) result.grandTotal = val
+    if ('vendorTotal' in result) result.vendorTotal = val
+  }
+
+
   return result
 }
 
