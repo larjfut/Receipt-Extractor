@@ -98,3 +98,4 @@ async function createPurchaseRequisition(fields, attachments, signature) {
 }
 
 module.exports = { createPurchaseRequisition }
+

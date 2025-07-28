@@ -1,6 +1,10 @@
-import React, { useContext, useState } from "react"
-import axios from "axios"
-import { ReceiptContext } from "../context/ReceiptContext.jsx"
+
+import React, { useContext, useState } from 'react'
+import axios from 'axios'
+import { ReceiptContext } from '../context/ReceiptContext.jsx'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+
 
 export default function SubmitPage() {
   const { receipt } = useContext(ReceiptContext)
@@ -13,7 +17,8 @@ export default function SubmitPage() {
     setError(null)
     setSuccess(false)
     try {
-      await axios.post("http://localhost:5000/api/submit", {
+
+      await axios.post(`${API_BASE_URL}/submit`, {
         fields: receipt.fields,
         attachments: receipt.attachments.map((file) => ({
           name: file.name,
@@ -55,5 +60,7 @@ export default function SubmitPage() {
         </p>
       )}
     </div>
-  )
+
+  );
+
 }

@@ -17,5 +17,6 @@ export function ReceiptProvider({ children }) {
     <ReceiptContext.Provider value={{ receipt, setReceipt }}>
       {children}
     </ReceiptContext.Provider>
-  )
+
+  );
 }

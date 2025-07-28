@@ -68,10 +68,20 @@ LIST_ID=your‑list‑id
 
 At runtime the backend uses these values to obtain an access token via the client credentials grant and to talk to the Microsoft Graph API. See `backend/sharepointClient.js` for the implementation details. When deploying to production you should store secrets securely (e.g. Azure Key Vault) rather than committing them to source control.
 
+### API base URL
+
+The frontend looks for `VITE_API_BASE_URL` to know where the backend is running. When the variable is not set it defaults to `/api`.
+
+```bash
+# frontend/.env
+VITE_API_BASE_URL=http://localhost:5000/api
+```
+
 ## Running in production
 
 For production builds run `npm run build` in the `frontend` directory to generate a static build in `frontend/dist`. You can then serve this folder through your preferred HTTP server (Nginx, Express, etc.). The backend can be deployed to any Node‑capable environment; just remember to set the environment variables described above.
 
 ## Contributing
 
-This project is a work in progress. Issues and pull requests are welcome. When adding new fields or altering the form structure, update both `backend/fieldMapping.json` and the corresponding frontend components to ensure data flows correctly from OCR through to SharePoint.
+
+This project is a work in progress.  Issues and pull requests are welcome.  When adding new fields or altering the form structure, update both `backend/fieldMapping.json` and the corresponding frontend components to ensure data flows correctly from OCR through to SharePoint.

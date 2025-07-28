@@ -27,3 +27,4 @@ function parseReceiptData(tesseractData, mapping) {
 }
 
 module.exports = { parseReceiptData }
+

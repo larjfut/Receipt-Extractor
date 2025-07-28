@@ -1,8 +1,11 @@
-import React, { useContext, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import axios from "axios"
-import { ReceiptContext } from "../context/ReceiptContext.jsx"
-import FileUpload from "../components/FileUpload.jsx"
+
+import React, { useContext, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { ReceiptContext } from '../context/ReceiptContext.jsx'
+import FileUpload from '../components/FileUpload.jsx'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export default function UploadPage() {
   const { receipt, setReceipt } = useContext(ReceiptContext)
@@ -17,13 +20,10 @@ export default function UploadPage() {
       const formData = new FormData()
       formData.append("file", file)
       // Call backend OCR endpoint
-      const resp = await axios.post(
-        "http://localhost:5000/api/upload",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      )
+
+      const resp = await axios.post(`${API_BASE_URL}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       // Update state with extracted fields and the uploaded file
       setReceipt({
         ...receipt,
@@ -46,5 +46,6 @@ export default function UploadPage() {
       {loading && <p className="mt-2 text-blue-600">Extracting data…</p>}
       {error && <p className="mt-2 text-red-600">{error}</p>}
     </div>
-  )
+
+  );
 }

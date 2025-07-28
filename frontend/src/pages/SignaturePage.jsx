@@ -48,5 +48,6 @@ export default function SignaturePage() {
         </button>
       </div>
     </div>
-  )
+
+  );
 }
