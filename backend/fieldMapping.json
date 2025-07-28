@@ -1,0 +1,338 @@
+[
+  {
+    "spInternalName": "Title",
+    "label": "Title",
+    "stateKey": "title",
+    "required": true,
+    "dataType": "string",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "Created",
+    "label": "Date Submitted",
+    "stateKey": "dateSubmitted",
+    "required": true,
+    "dataType": "date",
+    "validation": "YYYY-MM-DD"
+  },
+  {
+    "spInternalName": "Staff_x0020_Name",
+    "label": "Staff Name",
+    "stateKey": "staffName",
+    "required": true,
+    "dataType": "string/user",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "TCFVstaff",
+    "label": "TCFV Staff",
+    "stateKey": "tcfvStaff",
+    "required": false,
+    "dataType": "string",
+    "validation": null
+  },
+  {
+    "spInternalName": "Department1",
+    "label": "Department",
+    "stateKey": "department",
+    "required": true,
+    "dataType": "lookup",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "Approver",
+    "label": "Approver",
+    "stateKey": "approver",
+    "required": true,
+    "dataType": "string/user",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "Approval_x0020_Status",
+    "label": "Approval Status",
+    "stateKey": "approvalStatus",
+    "required": false,
+    "dataType": "string",
+    "validation": null
+  },
+  {
+    "spInternalName": "Validation_x0020_Status",
+    "label": "Validation Status",
+    "stateKey": "validationStatus",
+    "required": false,
+    "dataType": "string",
+    "validation": null
+  },
+  {
+    "spInternalName": "Departure_x0020_Date",
+    "label": "Departure Date",
+    "stateKey": "departureDate",
+    "required": false,
+    "dataType": "date",
+    "validation": "YYYY-MM-DD"
+  },
+  {
+    "spInternalName": "Pay_x0020_To",
+    "label": "Pay To",
+    "stateKey": "payTo",
+    "required": true,
+    "dataType": "string",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "Mail_x0020_To",
+    "label": "Mail To",
+    "stateKey": "mailTo",
+    "required": true,
+    "dataType": "string",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "Mailing_x0020_Address",
+    "label": "Mailing Address",
+    "stateKey": "mailingAddress",
+    "required": true,
+    "dataType": "string",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "Attachments",
+    "label": "Attachments",
+    "stateKey": "attachments",
+    "required": true,
+    "dataType": "file[]",
+    "validation": ">=1 .pdf"
+  },
+  {
+    "spInternalName": "Notes1",
+    "label": "Notes",
+    "stateKey": "notes",
+    "required": false,
+    "dataType": "text",
+    "validation": null
+  },
+  {
+    "spInternalName": "Comments",
+    "label": "Comments",
+    "stateKey": "comments",
+    "required": false,
+    "dataType": "text",
+    "validation": null
+  },
+  {
+    "spInternalName": "Reimbursement",
+    "label": "Reimbursement",
+    "stateKey": "reimbursement",
+    "required": false,
+    "dataType": "number",
+    "validation": ">=0"
+  },
+  {
+    "spInternalName": "Mileage1",
+    "label": "Employee Mileage Entries",
+    "stateKey": "mileageEntries",
+    "required": false,
+    "dataType": "table",
+    "validation": "each row complete"
+  },
+  {
+    "spInternalName": "Signature1",
+    "label": "Signature",
+    "stateKey": "signature",
+    "required": true,
+    "dataType": "dataURL",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "PurchasesP1.Date",
+    "label": "Invoice Date",
+    "stateKey": "purchases[i].date",
+    "required": true,
+    "dataType": "date",
+    "validation": "YYYY-MM-DD"
+  },
+  {
+    "spInternalName": "PurchasesP1.Vendor",
+    "label": "Vendor",
+    "stateKey": "purchases[i].vendor",
+    "required": true,
+    "dataType": "string",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "PurchasesP1.ItemDescription",
+    "label": "Item Description",
+    "stateKey": "purchases[i].description",
+    "required": true,
+    "dataType": "string",
+    "validation": "non-empty"
+  },
+  {
+    "spInternalName": "PurchasesP1.GL",
+    "label": "GL Code",
+    "stateKey": "purchases[i].glCode",
+    "required": true,
+    "dataType": "dropdown",
+    "validation": "in options"
+  },
+  {
+    "spInternalName": "PurchasesP1.Subtotal",
+    "label": "Subtotal",
+    "stateKey": "purchases[i].subtotal",
+    "required": true,
+    "dataType": "number",
+    "validation": ">=0"
+  },
+  {
+    "spInternalName": "PurchasesP1.Tax",
+    "label": "Tax",
+    "stateKey": "purchases[i].tax",
+    "required": true,
+    "dataType": "number",
+    "validation": ">=0"
+  },
+  {
+    "spInternalName": "PurchasesP1.Total",
+    "label": "Total",
+    "stateKey": "purchases[i].total",
+    "required": true,
+    "dataType": "number",
+    "validation": ">=0"
+  },
+  {
+    "spInternalName": "ANum2",
+    "label": "# of Projects",
+    "stateKey": "numberOfProjects",
+    "required": true,
+    "dataType": "number",
+    "validation": ">=1"
+  },
+  {
+    "spInternalName": "Project5Personal",
+    "label": "Project Code 1",
+    "stateKey": "projectCodes[0]",
+    "required": true,
+    "dataType": "dropdown",
+    "validation": "if numberOfProjects>=1"
+  },
+  {
+    "spInternalName": "Project6Personal",
+    "label": "Project Code 2",
+    "stateKey": "projectCodes[1]",
+    "required": false,
+    "dataType": "dropdown",
+    "validation": "if numberOfProjects>=2"
+  },
+  {
+    "spInternalName": "ANumF2",
+    "label": "# of Funders",
+    "stateKey": "numberOfFunders",
+    "required": true,
+    "dataType": "number",
+    "validation": ">=1"
+  },
+  {
+    "spInternalName": "ASplit2",
+    "label": "Split By",
+    "stateKey": "splitBy",
+    "required": true,
+    "dataType": "dropdown",
+    "validation": "['Percentage','Flat Amount']"
+  },
+  {
+    "spInternalName": "Funder4Vendor",
+    "label": "Funder 1",
+    "stateKey": "funders[0].name",
+    "required": true,
+    "dataType": "dropdown",
+    "validation": "if numberOfFunders>=1"
+  },
+  {
+    "spInternalName": "P_x005F_x0025_toFunder1",
+    "label": "% to Funder 1",
+    "stateKey": "funders[0].percent",
+    "required": false,
+    "dataType": "number",
+    "validation": "if splitBy=='Percentage', sum=100"
+  },
+  {
+    "spInternalName": "PF1_Amount_FLAT",
+    "label": "Funder 1 Amount",
+    "stateKey": "funders[0].flat",
+    "required": false,
+    "dataType": "number",
+    "validation": "if splitBy=='Flat Amount', sum=total"
+  },
+  {
+    "spInternalName": "Funder2Personal",
+    "label": "Funder 2",
+    "stateKey": "funders[1].name",
+    "required": false,
+    "dataType": "dropdown",
+    "validation": "if numberOfFunders>=2"
+  },
+  {
+    "spInternalName": "P_x005F_x0025_toFunder2",
+    "label": "% to Funder 2",
+    "stateKey": "funders[1].percent",
+    "required": false,
+    "dataType": "number",
+    "validation": "if splitBy=='Percentage', sum=100"
+  },
+  {
+    "spInternalName": "PF2_Amount_FLAT",
+    "label": "Funder 2 Amount",
+    "stateKey": "funders[1].flat",
+    "required": false,
+    "dataType": "number",
+    "validation": "if splitBy=='Flat Amount', sum=total"
+  },
+  {
+    "spInternalName": "SubtotalP",
+    "label": "Purchases Subtotal",
+    "stateKey": "subtotalP",
+    "required": false,
+    "dataType": "number",
+    "validation": "auto-calc"
+  },
+  {
+    "spInternalName": "TaxPTotal",
+    "label": "Total Tax",
+    "stateKey": "taxTotal",
+    "required": false,
+    "dataType": "number",
+    "validation": "auto-calc"
+  },
+  {
+    "spInternalName": "TotalonPersonalCard",
+    "label": "Total on Card",
+    "stateKey": "totalOnCard",
+    "required": false,
+    "dataType": "number",
+    "validation": "auto-calc"
+  },
+  {
+    "spInternalName": "TotalMileage",
+    "label": "Total Mileage",
+    "stateKey": "totalMileage",
+    "required": false,
+    "dataType": "number",
+    "validation": "auto-calc"
+  },
+  {
+    "spInternalName": "TotalReimbursement",
+    "label": "Grand Total",
+    "stateKey": "grandTotal",
+    "required": false,
+    "dataType": "number",
+    "validation": "auto-calc"
+  },
+  {
+    "spInternalName": "VendorTotal",
+    "label": "Vendor Total",
+    "stateKey": "vendorTotal",
+    "required": false,
+    "dataType": "number",
+    "validation": null
+  }
+]
