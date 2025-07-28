@@ -9,7 +9,24 @@ const fieldMapping = require('./fieldMapping.json');
 
 // Initialize Express
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/gif',
+      'image/bmp',
+      'image/tiff',
+      'image/webp',
+      'application/pdf'
+    ]
+    if (allowed.includes(file.mimetype)) cb(null, true)
+    else cb(new Error('Invalid file type'))
+  }
+})
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -32,24 +49,30 @@ app.get('/api/fields', (req, res) => {
  * endpoint does not persist anything – it simply extracts text and parses
  * basic values.
  */
-app.post('/api/upload', upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: 'No file uploaded' });
+app.post('/api/upload', (req, res) => {
+  upload.single('file')(req, res, async err => {
+    if (err) {
+      console.error(err)
+      return res.status(400).json({ success: false, error: err.message })
     }
-    const buffer = req.file.buffer;
-    // Recognize text using Tesseract.js.  The logger can be removed for
-    // production but is useful during development.
-    const result = await Tesseract.recognize(buffer, 'eng', {
-      logger: (m) => console.log(m),
-    });
-    const parsed = parseReceiptData(result.data, fieldMapping);
-    res.json({ success: true, data: parsed, raw: result.data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+    try {
+      if (!req.file) {
+        return res
+          .status(400)
+          .json({ success: false, error: 'No file uploaded' })
+      }
+      const buffer = req.file.buffer
+      const result = await Tesseract.recognize(buffer, 'eng', {
+        logger: m => console.log(m)
+      })
+      const parsed = parseReceiptData(result.data, fieldMapping)
+      res.json({ success: true, data: parsed, raw: result.data })
+    } catch (err) {
+      console.error(err)
+      res.status(500).json({ success: false, error: err.message })
+    }
+  })
+})
 
 /**
  * POST /api/submit
