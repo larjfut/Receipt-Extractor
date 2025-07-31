@@ -65,7 +65,7 @@ function parseReceiptData(tesseractData, mapping) {
     if ('taxTotal' in result) result.taxTotal = val
   }
 
-  const totalMatch = text.match(/(?:grand\s*)?total[^0-9]{0,10}([\d.,]+)/i)
+  const totalMatch = text.match(/\b(?:grand\s*)?total\b[^0-9]{0,10}([\d.,]+)/i)
   if (totalMatch) {
     const val = clean(totalMatch[1])
     result['purchases[0].total'] = val
