@@ -11,6 +11,10 @@ coverage/
 # Environment variables
 .env
 .env.*
+.env.local
+.env.production
+.env.*.local
+node_modules/
 
 # Misc
 .DS_Store
