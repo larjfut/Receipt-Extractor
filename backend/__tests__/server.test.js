@@ -21,4 +21,10 @@ describe('server routes', () => {
     expect(res.status).toBe(200)
     expect(res.body.success).toBe(true)
   })
+
+  it('lists users', async () => {
+    const res = await request(app).get('/api/users')
+    expect(res.status).toBe(200)
+    expect(Array.isArray(res.body)).toBe(true)
+  })
 })

@@ -4,7 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const Tesseract = require('tesseract.js');
 const { parseReceiptData } = require('./parseReceipt');
-const { createPurchaseRequisition } = require('./sharepointClient');
+const { createPurchaseRequisition, listActiveUsers } = require('./sharepointClient')
 const fieldMapping = require('./fieldMapping.json');
 
 // Initialize Express
@@ -93,6 +93,21 @@ app.post('/api/submit', async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+/**
+ * GET /api/users
+ *
+ * Returns the array of active Azure AD users for manual selection in the UI.
+ */
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await listActiveUsers()
+    res.json(users)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
 
 
 
