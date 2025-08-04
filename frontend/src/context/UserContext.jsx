@@ -1,9 +1,9 @@
 import React, { createContext, useEffect, useState } from 'react'
 
-export const UserContext = createContext({ displayName: null })
+export const UserContext = createContext({ user: null, setUser: () => {} })
 
 export function UserProvider({ children }) {
-  const [displayName, setDisplayName] = useState(null)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -24,7 +24,11 @@ export function UserProvider({ children }) {
           scopes: ['User.Read'],
           account
         })
-        if (active) setDisplayName(token.account?.name || null)
+        if (active)
+          setUser({
+            id: account?.homeAccountId || null,
+            displayName: token.account?.name || null
+          })
       } catch (err) {
         console.error(err)
       }
@@ -35,9 +39,5 @@ export function UserProvider({ children }) {
     }
   }, [])
 
-  return (
-    <UserContext.Provider value={{ displayName }}>
-      {children}
-    </UserContext.Provider>
-  )
+  return <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>
 }

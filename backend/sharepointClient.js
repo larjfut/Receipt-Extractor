@@ -33,6 +33,27 @@ function getGraphClient() {
 }
 
 /**
+ * List active Azure AD users. When Graph credentials are not configured this
+ * function returns a stub array to allow manual selection during development.
+ */
+async function listActiveUsers() {
+  const graph = getGraphClient()
+  if (!graph) {
+    console.log('SharePoint client not configured. Returning stub users.')
+    return [{ id: 'stub', displayName: 'Test User' }]
+  }
+  try {
+    const res = await graph
+      .api('/users?$select=id,displayName&$filter=accountEnabled eq true')
+      .get()
+    return res.value || []
+  } catch (err) {
+    console.error('Error fetching users:', err)
+    throw err
+  }
+}
+
+/**
  * Create a new item in the SharePoint list using the Graph API.  The
  * `fields` object is keyed by stateKey; this function must translate it
  * into SharePoint internal names (see fieldMapping.json).  Attachments and
@@ -89,4 +110,4 @@ async function createPurchaseRequisition(fields, attachments, signature) {
   }
 }
 
-module.exports = { createPurchaseRequisition };
+module.exports = { createPurchaseRequisition, listActiveUsers }
