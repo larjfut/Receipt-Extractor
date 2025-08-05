@@ -6,6 +6,16 @@ const Tesseract = require('tesseract.js');
 const { parseReceiptData } = require('./parseReceipt');
 const { createPurchaseRequisition, listActiveUsers } = require('./sharepointClient')
 const fieldMapping = require('./fieldMapping.json');
+const path = require('path')
+
+let tusServer
+try {
+  const { Server, FileStore } = require('tus-node-server')
+  tusServer = new Server()
+  tusServer.datastore = new FileStore({ path: path.join(__dirname, 'uploads') })
+} catch (err) {
+  console.warn('tus-node-server not installed')
+}
 
 // Initialize Express
 const app = express();
@@ -30,6 +40,12 @@ const upload = multer({
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+if (tusServer) {
+  const uploadApp = express()
+  uploadApp.all('*', (req, res) => tusServer.handle(req, res))
+  app.use('/files', uploadApp)
+}
 
 /**
  * GET /api/fields

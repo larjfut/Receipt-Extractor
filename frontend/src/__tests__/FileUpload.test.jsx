@@ -3,10 +3,24 @@ import { render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import FileUpload from '../components/FileUpload.jsx'
 import { checkImageQuality } from '../utils/imageQuality'
+import { Upload } from 'tus-js-client'
 
 jest.mock('../utils/imageQuality', () => ({
   checkImageQuality: jest.fn(),
 }))
+
+jest.mock('tus-js-client', () => {
+  const start = jest.fn()
+  const abort = jest.fn()
+  return {
+    Upload: jest.fn().mockImplementation((_, opts) => {
+      start.mockImplementation(() => {
+        opts.onProgress && opts.onProgress(50, 100)
+      })
+      return { start, abort }
+    })
+  }
+}, { virtual: true })
 
 jest.mock('pdfjs-dist/build/pdf', () => ({
   GlobalWorkerOptions: { workerSrc: '' },
@@ -111,4 +125,20 @@ test('renders pdf preview for uploaded pdf', async () => {
   const file = new File(['pdf'], 'test.pdf', { type: 'application/pdf' })
   await user.upload(input, file)
   await waitFor(() => expect(container.querySelector('canvas')).toBeInTheDocument())
+})
+
+test('allows pausing and resuming uploads', async () => {
+  const user = userEvent.setup()
+  const { container, findByText } = render(
+    <FileUpload onFileSelected={() => {}} />
+  )
+  const input = container.querySelector('input[accept="image/*,application/pdf"]')
+  const file = new File(['pause'], 'pause.png', { type: 'image/png' })
+  await user.upload(input, file)
+  const pauseBtn = await findByText(/pause/i)
+  await user.click(pauseBtn)
+  expect(Upload.mock.instances[0].abort).toHaveBeenCalled()
+  const resumeBtn = await findByText(/resume/i)
+  await user.click(resumeBtn)
+  expect(Upload.mock.instances[0].start).toHaveBeenCalledTimes(2)
 })

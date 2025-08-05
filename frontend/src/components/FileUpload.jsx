@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
+import { Upload } from 'tus-js-client'
 import { checkImageQuality } from '../utils/imageQuality'
 
 /**
@@ -9,6 +10,40 @@ export default function FileUpload({ onFileSelected }) {
   const fileInputRef = useRef(null)
   const cameraInputRef = useRef(null)
   const [previews, setPreviews] = useState([])
+
+  const uploadFile = (file, index) => {
+    const upload = new Upload(file, {
+      endpoint: '/files',
+      onError: () => {
+        setPreviews((prev) => {
+          const copy = [...prev]
+          copy[index].status = 'error'
+          return copy
+        })
+      },
+      onProgress: (bytesUploaded, bytesTotal) => {
+        const progress = (bytesUploaded / bytesTotal) * 100
+        setPreviews((prev) => {
+          const copy = [...prev]
+          copy[index].progress = progress
+          return copy
+        })
+      },
+      onSuccess: () => {
+        setPreviews((prev) => {
+          const copy = [...prev]
+          copy[index].status = 'done'
+          return copy
+        })
+      }
+    })
+    upload.start()
+    setPreviews((prev) => {
+      const copy = [...prev]
+      copy[index].upload = upload
+      return copy
+    })
+  }
 
   const processFile = (file) =>
     new Promise((resolve) => {
@@ -28,11 +63,16 @@ export default function FileUpload({ onFileSelected }) {
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList || [])
     if (!files.length) return
+    const startIndex = previews.length
     const newPreviews = files.map((file) => ({
       url: URL.createObjectURL(file),
       type: file.type,
+      progress: 0,
+      status: 'uploading',
+      upload: null
     }))
     setPreviews((prev) => [...prev, ...newPreviews])
+    files.forEach((file, i) => uploadFile(file, startIndex + i))
     const results = await Promise.all(files.map(processFile))
     onFileSelected(results)
   }
@@ -54,6 +94,24 @@ export default function FileUpload({ onFileSelected }) {
 
   const openFilePicker = () => {
     fileInputRef.current?.click()
+  }
+
+  const pauseUpload = (index) => {
+    setPreviews((prev) => {
+      const copy = [...prev]
+      copy[index].upload?.abort()
+      copy[index].status = 'paused'
+      return copy
+    })
+  }
+
+  const resumeUpload = (index) => {
+    setPreviews((prev) => {
+      const copy = [...prev]
+      copy[index].upload?.start()
+      copy[index].status = 'uploading'
+      return copy
+    })
   }
 
   useEffect(
@@ -83,18 +141,36 @@ export default function FileUpload({ onFileSelected }) {
       </div>
       {previews.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
-          {previews.map((p, i) =>
-            p.type === 'application/pdf' ? (
-              <PdfPreview key={i} url={p.url} />
-            ) : (
-              <img
-                key={i}
-                src={p.url}
-                alt={`preview-${i}`}
-                className="w-20 h-20 object-cover border"
-              />
-            )
-          )}
+          {previews.map((p, i) => (
+            <div key={i} className="flex flex-col items-center">
+              {p.type === 'application/pdf' ? (
+                <PdfPreview url={p.url} />
+              ) : (
+                <img
+                  src={p.url}
+                  alt={`preview-${i}`}
+                  className="w-20 h-20 object-cover border"
+                />
+              )}
+              <div className="w-20 h-1 bg-gray-200 mt-1">
+                <div
+                  className="h-full bg-blue-500"
+                  style={{ width: `${p.progress}%` }}
+                />
+              </div>
+              {p.status !== 'done' && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    p.status === 'uploading' ? pauseUpload(i) : resumeUpload(i)
+                  }
+                  className="mt-1 text-xs text-blue-600"
+                >
+                  {p.status === 'uploading' ? 'Pause' : 'Resume'}
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       )}
       <input
