@@ -5,6 +5,12 @@ import { ReceiptContext } from '../context/ReceiptContext.jsx'
 import FileUpload from '../components/FileUpload.jsx'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const QUALITY_MESSAGES = {
+  edges:
+    'Receipt edges not detected. Ensure entire receipt is visible and retry.',
+  blur: 'Image too blurry for OCR. Retake with better focus.',
+  ocr: 'Text too blurry for OCR. Retake in better lighting.',
+}
 
 export default function UploadPage() {
   const { receipt, setReceipt } = useContext(ReceiptContext)
@@ -15,20 +21,14 @@ export default function UploadPage() {
 
   const handleFileUpload = async (file, quality) => {
     setError(null)
-    if (quality?.error) {
-      setError(quality.error)
-      return
-    }
-    if (!quality?.hasFourEdges) {
-      setError('Receipt edges not detected. Ensure entire receipt is visible and retry.')
-      return
-    }
-    if (quality.blurVariance < 100) {
-      setError('Image is too blurry. Please retake.')
-      return
-    }
-    if (quality.ocrConfidence < 60) {
-      setError('Text is not clear enough. Retake in better lighting.')
+    let qualityMessage = null
+    if (quality?.error) qualityMessage = quality.error
+    else if (!quality?.hasFourEdges) qualityMessage = QUALITY_MESSAGES.edges
+    else if (quality.blurVariance < 100) qualityMessage = QUALITY_MESSAGES.blur
+    else if (quality.ocrConfidence < 60) qualityMessage = QUALITY_MESSAGES.ocr
+
+    if (qualityMessage) {
+      setError({ type: 'quality', message: qualityMessage })
       return
     }
 
@@ -37,17 +37,20 @@ export default function UploadPage() {
       const formData = new FormData()
       formData.append('file', file)
       const resp = await axios.post(`${API_BASE_URL}/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
       })
       setReceipt({
         ...receipt,
         fields: resp.data.data || {},
-        attachments: [file]
+        attachments: [file],
       })
       navigate('/review')
     } catch (err) {
       console.error(err)
-      setError(err.response?.data?.error || err.message)
+      setError({
+        type: 'backend',
+        message: err.response?.data?.error || err.message,
+      })
     } finally {
       setLoading(false)
     }
@@ -55,7 +58,7 @@ export default function UploadPage() {
 
   const handleRetake = () => {
     setError(null)
-    setInputKey(k => k + 1)
+    setInputKey((k) => k + 1)
   }
 
   return (
@@ -65,14 +68,16 @@ export default function UploadPage() {
       {loading && <p className="mt-2 text-blue-600">Extracting data…</p>}
       {error && (
         <div className="mt-2">
-          <p className="text-red-600">{error}</p>
-          <button
-            type="button"
-            onClick={handleRetake}
-            className="mt-2 px-4 py-2 bg-gray-200 rounded"
-          >
-            Retake
-          </button>
+          <p className="text-red-600">{error.message}</p>
+          {error.type === 'quality' && (
+            <button
+              type="button"
+              onClick={handleRetake}
+              className="mt-2 px-4 py-2 bg-gray-200 rounded"
+            >
+              Retake
+            </button>
+          )}
         </div>
       )}
     </div>
