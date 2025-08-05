@@ -8,7 +8,7 @@ import { checkImageQuality } from '../utils/imageQuality'
 export default function FileUpload({ onFileSelected }) {
   const cameraInputRef = useRef(null)
 
-  const processFile = file => {
+  const processFile = (file) => {
     const img = new Image()
     img.onload = async () => {
       const quality = await checkImageQuality(img)
@@ -18,7 +18,7 @@ export default function FileUpload({ onFileSelected }) {
     img.src = URL.createObjectURL(file)
   }
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const file = e.target.files[0]
     if (file) {
       processFile(file)
@@ -29,7 +29,7 @@ export default function FileUpload({ onFileSelected }) {
     cameraInputRef.current?.click()
   }
 
-  const handleCameraChange = e => {
+  const handleCameraChange = (e) => {
     const file = e.target.files[0]
     if (file) {
       processFile(file)
@@ -59,8 +59,14 @@ export default function FileUpload({ onFileSelected }) {
       >
         Take Photo
       </button>
-      <p className="mt-2 text-gray-500">Choose an image or PDF of your receipt.</p>
+      <p className="mt-2 text-gray-500">
+        Choose an image or PDF of your receipt.
+      </p>
+      <ul className="mt-2 text-gray-500 text-sm list-disc list-inside">
+        <li>Show all four receipt edges.</li>
+        <li>Use sharp focus and good lighting.</li>
+        <li>Ensure text is clear for OCR.</li>
+      </ul>
     </div>
   )
 }
-
