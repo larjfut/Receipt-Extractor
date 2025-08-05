@@ -1,4 +1,5 @@
 import React, { useRef } from 'react'
+import { checkImageQuality } from '../utils/imageQuality'
 
 /**
  * A basic file upload component.  When the user selects a file, the
@@ -7,10 +8,20 @@ import React, { useRef } from 'react'
 export default function FileUpload({ onFileSelected }) {
   const cameraInputRef = useRef(null)
 
+  const processFile = file => {
+    const img = new Image()
+    img.onload = async () => {
+      const quality = await checkImageQuality(img)
+      onFileSelected(file, quality)
+      URL.revokeObjectURL(img.src)
+    }
+    img.src = URL.createObjectURL(file)
+  }
+
   const handleChange = e => {
     const file = e.target.files[0]
     if (file) {
-      onFileSelected(file)
+      processFile(file)
     }
   }
 
@@ -21,7 +32,7 @@ export default function FileUpload({ onFileSelected }) {
   const handleCameraChange = e => {
     const file = e.target.files[0]
     if (file) {
-      onFileSelected(file)
+      processFile(file)
     }
   }
 
