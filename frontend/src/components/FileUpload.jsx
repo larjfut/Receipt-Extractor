@@ -2,53 +2,74 @@ import React, { useRef } from 'react'
 import { checkImageQuality } from '../utils/imageQuality'
 
 /**
- * A basic file upload component.  When the user selects a file, the
- * `onFileSelected` callback is invoked with the first file in the input.
+ * Drag-and-drop file upload component. The `onFileSelected` callback receives
+ * an array of objects containing `{ file, quality }` for each selected file.
  */
 export default function FileUpload({ onFileSelected }) {
+  const fileInputRef = useRef(null)
   const cameraInputRef = useRef(null)
 
-  const processFile = (file) => {
-    const img = new Image()
-    img.onload = async () => {
-      const quality = await checkImageQuality(img)
-      onFileSelected(file, quality)
-      URL.revokeObjectURL(img.src)
-    }
-    img.src = URL.createObjectURL(file)
+  const processFile = (file) =>
+    new Promise((resolve) => {
+      const img = new Image()
+      img.onload = async () => {
+        const quality = await checkImageQuality(img)
+        URL.revokeObjectURL(img.src)
+        resolve({ file, quality })
+      }
+      img.src = URL.createObjectURL(file)
+    })
+
+  const handleFiles = async (fileList) => {
+    const files = Array.from(fileList || [])
+    if (!files.length) return
+    const results = await Promise.all(files.map(processFile))
+    onFileSelected(results)
   }
 
-  const handleChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      processFile(file)
-    }
-  }
+  const handleChange = (e) => handleFiles(e.target.files)
 
   const handleCameraClick = () => {
     cameraInputRef.current?.click()
   }
 
-  const handleCameraChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      processFile(file)
-    }
+  const handleCameraChange = (e) => handleFiles(e.target.files)
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    handleFiles(e.dataTransfer.files)
+  }
+
+  const handleDragOver = (e) => e.preventDefault()
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click()
   }
 
   return (
-    <div className="p-6 border-dashed border-2 border-gray-300 rounded-lg bg-white">
-      <input
-        type="file"
-        accept="image/*,application/pdf"
-        onChange={handleChange}
-        className="block w-full text-sm text-gray-700 file:py-2 file:px-4 file:border file:border-gray-300 file:rounded file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
-      />
+    <div>
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onClick={openFilePicker}
+        className="p-6 border-dashed border-2 border-gray-300 rounded-lg bg-white text-center cursor-pointer"
+      >
+        <p className="text-gray-500">Drag and drop files here or click to select</p>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,application/pdf"
+          multiple
+          onChange={handleChange}
+          className="hidden"
+        />
+      </div>
       <input
         ref={cameraInputRef}
         type="file"
         accept="image/*"
         capture="environment"
+        multiple
         onChange={handleCameraChange}
         className="hidden"
       />
@@ -59,9 +80,7 @@ export default function FileUpload({ onFileSelected }) {
       >
         Take Photo
       </button>
-      <p className="mt-2 text-gray-500">
-        Choose an image or PDF of your receipt.
-      </p>
+      <p className="mt-2 text-gray-500">Choose an image or PDF of your receipt.</p>
       <ul className="mt-2 text-gray-500 text-sm list-disc list-inside">
         <li>Show all four receipt edges.</li>
         <li>Use sharp focus and good lighting.</li>
