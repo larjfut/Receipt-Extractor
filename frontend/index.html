@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Receipt Extractor App" />
     <title>Receipt Extractor</title>
+    <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="onOpenCvReady()" type="text/javascript"></script>
+    <script type="text/javascript">
+      function onOpenCvReady () {
+        window.cv = cv
+      }
+    </script>
   </head>
   <body class="bg-gray-50">
     <div id="root"></div>
