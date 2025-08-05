@@ -8,6 +8,19 @@ jest.mock('../utils/imageQuality', () => ({
   checkImageQuality: jest.fn(),
 }))
 
+jest.mock('pdfjs-dist/build/pdf', () => ({
+  GlobalWorkerOptions: { workerSrc: '' },
+  getDocument: () => ({
+    promise: Promise.resolve({
+      getPage: () =>
+        Promise.resolve({
+          getViewport: () => ({ width: 100, height: 100 }),
+          render: () => ({ promise: Promise.resolve() }),
+        }),
+    }),
+  }),
+}))
+
 beforeEach(() => {
   checkImageQuality.mockImplementation(() =>
     Promise.resolve({
@@ -17,6 +30,7 @@ beforeEach(() => {
     })
   )
   global.URL.createObjectURL = jest.fn(() => 'blob:mock')
+  global.URL.revokeObjectURL = jest.fn()
   global.Image = class {
     constructor () {
       setTimeout(() => {
@@ -79,4 +93,22 @@ test('handles multiple file selection', async () => {
   expect(result).toHaveLength(2)
   expect(result[0].file).toBe(files[0])
   expect(result[1].file).toBe(files[1])
+})
+
+test('renders image preview for uploaded image', async () => {
+  const user = userEvent.setup()
+  const { container } = render(<FileUpload onFileSelected={() => {}} />)
+  const input = container.querySelector('input[accept="image/*,application/pdf"]')
+  const file = new File(['img'], 'img.png', { type: 'image/png' })
+  await user.upload(input, file)
+  await waitFor(() => expect(container.querySelector('img')).toBeInTheDocument())
+})
+
+test('renders pdf preview for uploaded pdf', async () => {
+  const user = userEvent.setup()
+  const { container } = render(<FileUpload onFileSelected={() => {}} />)
+  const input = container.querySelector('input[accept="image/*,application/pdf"]')
+  const file = new File(['pdf'], 'test.pdf', { type: 'application/pdf' })
+  await user.upload(input, file)
+  await waitFor(() => expect(container.querySelector('canvas')).toBeInTheDocument())
 })
