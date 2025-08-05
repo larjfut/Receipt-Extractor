@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import { checkImageQuality } from '../utils/imageQuality'
 
 /**
@@ -8,9 +8,14 @@ import { checkImageQuality } from '../utils/imageQuality'
 export default function FileUpload({ onFileSelected }) {
   const fileInputRef = useRef(null)
   const cameraInputRef = useRef(null)
+  const [previews, setPreviews] = useState([])
 
   const processFile = (file) =>
     new Promise((resolve) => {
+      if (file.type === 'application/pdf') {
+        resolve({ file, quality: null })
+        return
+      }
       const img = new Image()
       img.onload = async () => {
         const quality = await checkImageQuality(img)
@@ -23,6 +28,11 @@ export default function FileUpload({ onFileSelected }) {
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList || [])
     if (!files.length) return
+    const newPreviews = files.map((file) => ({
+      url: URL.createObjectURL(file),
+      type: file.type,
+    }))
+    setPreviews((prev) => [...prev, ...newPreviews])
     const results = await Promise.all(files.map(processFile))
     onFileSelected(results)
   }
@@ -46,6 +56,13 @@ export default function FileUpload({ onFileSelected }) {
     fileInputRef.current?.click()
   }
 
+  useEffect(
+    () => () => {
+      previews.forEach((p) => URL.revokeObjectURL(p.url))
+    },
+    [previews]
+  )
+
   return (
     <div>
       <div
@@ -64,6 +81,22 @@ export default function FileUpload({ onFileSelected }) {
           className="hidden"
         />
       </div>
+      {previews.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {previews.map((p, i) =>
+            p.type === 'application/pdf' ? (
+              <PdfPreview key={i} url={p.url} />
+            ) : (
+              <img
+                key={i}
+                src={p.url}
+                alt={`preview-${i}`}
+                className="w-20 h-20 object-cover border"
+              />
+            )
+          )}
+        </div>
+      )}
       <input
         ref={cameraInputRef}
         type="file"
@@ -89,3 +122,30 @@ export default function FileUpload({ onFileSelected }) {
     </div>
   )
 }
+
+function PdfPreview({ url }) {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    import('pdfjs-dist/build/pdf').then((pdfjs) => {
+      pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/build/pdf.worker.min.js',
+        import.meta.url
+      ).toString()
+      pdfjs
+        .getDocument(url)
+        .promise.then((pdf) => pdf.getPage(1))
+        .then((page) => {
+          const viewport = page.getViewport({ scale: 0.2 })
+          const canvas = canvasRef.current
+          const context = canvas.getContext('2d')
+          canvas.height = viewport.height
+          canvas.width = viewport.width
+          page.render({ canvasContext: context, viewport })
+        })
+    })
+  }, [url])
+
+  return <canvas ref={canvasRef} className="w-20 h-20 border" />
+}
+
