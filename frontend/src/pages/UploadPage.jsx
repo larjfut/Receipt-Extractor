@@ -19,13 +19,16 @@ export default function UploadPage() {
   const [error, setError] = useState(null)
   const [inputKey, setInputKey] = useState(0)
 
-  const handleFileUpload = async (file, quality) => {
+  const handleFileUpload = async (files) => {
     setError(null)
     let qualityMessage = null
-    if (quality?.error) qualityMessage = quality.error
-    else if (!quality?.hasFourEdges) qualityMessage = QUALITY_MESSAGES.edges
-    else if (quality.blurVariance < 100) qualityMessage = QUALITY_MESSAGES.blur
-    else if (quality.ocrConfidence < 60) qualityMessage = QUALITY_MESSAGES.ocr
+    for (const { file, quality } of files) {
+      if (quality?.error) qualityMessage = quality.error
+      else if (!quality?.hasFourEdges) qualityMessage = QUALITY_MESSAGES.edges
+      else if (quality.blurVariance < 100) qualityMessage = QUALITY_MESSAGES.blur
+      else if (quality.ocrConfidence < 60) qualityMessage = QUALITY_MESSAGES.ocr
+      if (qualityMessage) break
+    }
 
     if (qualityMessage) {
       setError({ type: 'quality', message: qualityMessage })
@@ -35,14 +38,20 @@ export default function UploadPage() {
     setLoading(true)
     try {
       const formData = new FormData()
-      formData.append('file', file)
+      files.forEach(({ file }) => formData.append('files', file))
       const resp = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
+      const fields = Array.isArray(resp.data)
+        ? resp.data.reduce((acc, cur) => ({ ...acc, ...(cur.data || {}) }), {})
+        : resp.data.data || {}
       setReceipt({
         ...receipt,
-        fields: resp.data.data || {},
-        attachments: [file],
+        fields,
+        attachments: [
+          ...(receipt.attachments || []),
+          ...files.map((f) => f.file),
+        ],
       })
       navigate('/review')
     } catch (err) {

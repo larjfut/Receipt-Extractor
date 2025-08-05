@@ -44,29 +44,33 @@ app.get('/api/fields', (req, res) => {
 /**
  * POST /api/upload
  *
- * Accepts a single file upload, runs OCR on it using Tesseract.js, and
- * returns an object keyed by the stateKeys defined in fieldMapping.  This
+ * Accepts multiple files, runs OCR on each using Tesseract.js, and returns an
+ * array of results keyed by the stateKeys defined in fieldMapping. This
  * endpoint does not persist anything – it simply extracts text and parses
  * basic values.
  */
 app.post('/api/upload', (req, res) => {
-  upload.single('file')(req, res, async err => {
+  upload.array('files')(req, res, async (err) => {
     if (err) {
       console.error(err)
       return res.status(400).json({ success: false, error: err.message })
     }
     try {
-      if (!req.file) {
+      if (!req.files || !req.files.length) {
         return res
           .status(400)
-          .json({ success: false, error: 'No file uploaded' })
+          .json({ success: false, error: 'No files uploaded' })
       }
-      const buffer = req.file.buffer
-      const result = await Tesseract.recognize(buffer, 'eng', {
-        logger: m => console.log(m)
-      })
-      const parsed = parseReceiptData(result.data, fieldMapping)
-      res.json({ success: true, data: parsed, raw: result.data })
+      const results = await Promise.all(
+        req.files.map(async (f) => {
+          const result = await Tesseract.recognize(f.buffer, 'eng', {
+            logger: (m) => console.log(m),
+          })
+          const parsed = parseReceiptData(result.data, fieldMapping)
+          return { success: true, data: parsed, raw: result.data }
+        })
+      )
+      res.json(results)
     } catch (err) {
       console.error(err)
       res.status(500).json({ success: false, error: err.message })
