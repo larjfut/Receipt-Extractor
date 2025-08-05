@@ -1,16 +1,30 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
+import { checkImageQuality } from '../utils/imageQuality.js'
 
 /**
  * A basic file upload component.  When the user selects a file, the
  * `onFileSelected` callback is invoked with the first file in the input.
  */
-export default function FileUpload({ onFileSelected }) {
+export default function FileUpload({ onFileSelected, onQualityIssues }) {
   const cameraInputRef = useRef(null)
+  const [retakeMessage, setRetakeMessage] = useState(false)
 
-  const handleChange = e => {
+  const processFile = async file => {
+    const result = await checkImageQuality(file)
+    if (result.ok) {
+      onQualityIssues?.([])
+      onFileSelected(file)
+    } else {
+      onQualityIssues?.(result.issues)
+      setRetakeMessage(true)
+      setTimeout(() => setRetakeMessage(false), 2000)
+    }
+  }
+
+  const handleChange = async e => {
     const file = e.target.files[0]
     if (file) {
-      onFileSelected(file)
+      await processFile(file)
     }
   }
 
@@ -18,10 +32,10 @@ export default function FileUpload({ onFileSelected }) {
     cameraInputRef.current?.click()
   }
 
-  const handleCameraChange = e => {
+  const handleCameraChange = async e => {
     const file = e.target.files[0]
     if (file) {
-      onFileSelected(file)
+      await processFile(file)
     }
   }
 
@@ -48,8 +62,8 @@ export default function FileUpload({ onFileSelected }) {
       >
         Take Photo
       </button>
+      {retakeMessage && <p className="mt-2 text-red-600">Please retake the photo</p>}
       <p className="mt-2 text-gray-500">Choose an image or PDF of your receipt.</p>
     </div>
   )
 }
-

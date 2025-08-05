@@ -39,6 +39,17 @@ This repo only contains source code; dependencies are not vendored.  To get up a
 
    This will start Vite on port 5173 (or the next available port) and open the app in your default browser.
 
+## Image quality requirements
+
+Uploaded images are evaluated for common problems before OCR:
+
+- **Receipt edges not detected** – ensure the full receipt is visible and clearly framed.
+- **Image is blurry** – retake the photo with better focus.
+- **Low OCR confidence** – improve lighting or use a higher resolution image.
+
+If any issues are found you will be prompted to retake the photo.
+
+
 ## Configuration
 
 ### Field mapping
