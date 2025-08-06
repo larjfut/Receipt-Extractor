@@ -40,7 +40,7 @@ def test_get_fields_content_type():
   status, _, body = wsgi_request('GET', '/fields', headers={'QUERY_STRING': 'contentType=tcfv-card'})
   assert status == 200
   fields = json.loads(body)
-  assert fields[0]['stateKey'] == 'fieldA'
+  assert fields[0]['stateKey'] == 'vendorName'
 
 
 def test_get_fields_invalid_content_type():

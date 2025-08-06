@@ -1,19 +1,62 @@
 {
-  "contentType": "TCFV Card",
-  "model": "prebuilt-document",
+  "contentType": "Purchase Requisition - TCFV Card",
+  "model": "prebuilt-receipt",
   "confidenceThreshold": 0.75,
   "fields": [
     {
-      "diField": "FieldA",
-      "spInternalName": "FieldA",
-      "label": "Field A",
-      "stateKey": "fieldA",
+      "diField": "MerchantName",
+      "spInternalName": "Vendor_x0020_Name_x0028_s_x0029",
+      "label": "Vendor Name(s)",
+      "stateKey": "vendorName",
       "dataType": "string",
       "required": true,
       "validation": "non-empty",
       "transformation": null,
       "confidence": 0.75
+    },
+    {
+      "diField": "TransactionDate",
+      "spInternalName": "Date_x0020_Submitted",
+      "label": "Date Submitted",
+      "stateKey": "transactionDate",
+      "dataType": "date",
+      "required": true,
+      "validation": "YYYY-MM-DD",
+      "transformation": "dateToISO",
+      "confidence": 0.75
+    },
+    {
+      "diField": "Total",
+      "spInternalName": "Grand_x0020_Total",
+      "label": "Grand Total",
+      "stateKey": "grandTotal",
+      "dataType": "currency",
+      "required": true,
+      "validation": "currency",
+      "transformation": "currencyToFloat",
+      "confidence": 0.75
+    },
+    {
+      "diField": "Subtotal",
+      "spInternalName": "SubtotalP",
+      "label": "Purchases Subtotal",
+      "stateKey": "subTotal",
+      "dataType": "currency",
+      "required": false,
+      "validation": "currency",
+      "transformation": "currencyToFloat",
+      "confidence": 0.75
+    },
+    {
+      "diField": "TotalTax",
+      "spInternalName": "TaxPTotal",
+      "label": "Total Tax",
+      "stateKey": "totalTax",
+      "dataType": "currency",
+      "required": false,
+      "validation": "currency",
+      "transformation": "currencyToFloat",
+      "confidence": 0.75
     }
   ]
 }
-
