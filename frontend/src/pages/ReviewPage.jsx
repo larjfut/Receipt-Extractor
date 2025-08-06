@@ -2,11 +2,13 @@ import React, { useContext, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { ReceiptContext } from '../context/ReceiptContext.jsx'
+import { mapContentType } from '../utils/mapContentType'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export default function ReviewPage() {
   const { receipt, setReceipt } = useContext(ReceiptContext)
+  const contentType = mapContentType(receipt.contentTypeName)
   const [mapping, setMapping] = useState([])
   const [errors, setErrors] = useState({})
   const navigate = useNavigate()
@@ -16,14 +18,16 @@ export default function ReviewPage() {
     // Fetch field mapping from backend so the form knows which fields to display.
     async function loadMapping() {
       try {
-        const res = await axios.get(`${API_BASE_URL}/fields`)
+        const res = await axios.get(`${API_BASE_URL}/fields`, {
+          params: { contentType },
+        })
         setMapping(res.data)
       } catch (e) {
         console.error('Failed to load field mapping', e)
       }
     }
     loadMapping()
-  }, [])
+  }, [contentType])
 
   const handleChange = (key, value) => {
     setReceipt(prev => ({
