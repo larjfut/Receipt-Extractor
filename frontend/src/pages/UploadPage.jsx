@@ -13,6 +13,7 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [inputKey, setInputKey] = useState(0)
+  const [readyAttachments, setReadyAttachments] = useState([])
 
   const handleFileUpload = async (files) => {
     setError(null)
@@ -20,7 +21,8 @@ export default function UploadPage() {
     for (const { file, quality } of files) {
       if (quality?.error) qualityMessage = quality.error
       else if (!quality?.hasFourEdges) qualityMessage = QUALITY_MESSAGES.edges
-      else if (quality.blurVariance < 100) qualityMessage = QUALITY_MESSAGES.blur
+      else if (quality.blurVariance < 100)
+        qualityMessage = QUALITY_MESSAGES.blur
       else if (quality.ocrConfidence < 60) qualityMessage = QUALITY_MESSAGES.ocr
       if (qualityMessage) break
     }
@@ -30,10 +32,15 @@ export default function UploadPage() {
       return
     }
 
+    setReadyAttachments((prev) => [...prev, ...files.map((f) => f.file)])
+  }
+
+  const uploadReadyAttachments = async () => {
+    setError(null)
     setLoading(true)
     try {
       const formData = new FormData()
-      files.forEach(({ file }) => formData.append('files', file))
+      readyAttachments.forEach((file) => formData.append('files', file))
       const resp = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
@@ -43,11 +50,9 @@ export default function UploadPage() {
       setReceipt({
         ...receipt,
         fields,
-        attachments: [
-          ...(receipt.attachments || []),
-          ...files.map((f) => f.file),
-        ],
+        attachments: [...(receipt.attachments || []), ...readyAttachments],
       })
+      setReadyAttachments([])
       navigate('/review')
     } catch (err) {
       console.error(err)
@@ -69,6 +74,30 @@ export default function UploadPage() {
     <div className="max-w-4xl mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Upload Receipt</h1>
       <FileUpload key={inputKey} onFileSelected={handleFileUpload} />
+      {readyAttachments.length > 0 && (
+        <div className="mt-4">
+          <h2 className="text-xl font-semibold mb-2">
+            Attachments Ready for Submit
+          </h2>
+          <div className="flex flex-wrap gap-4">
+            {readyAttachments.map((file, idx) => (
+              <img
+                key={idx}
+                src={URL.createObjectURL(file)}
+                alt={`ready-${idx}`}
+                className="w-24 h-24 object-cover rounded"
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={uploadReadyAttachments}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Submit Attachments
+          </button>
+        </div>
+      )}
       {loading && <p className="mt-2 text-blue-600">Extracting data…</p>}
       {error && (
         <div className="mt-2">
