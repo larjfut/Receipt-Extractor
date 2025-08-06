@@ -3,14 +3,14 @@ const fetch = require('node-fetch')
 const endpoint = process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT
 const key = process.env.AZURE_DOC_INTELLIGENCE_KEY
 
-async function analyzeDocument (file, model) {
+async function analyzeDocument (file, model, contentType) {
   const url = `${endpoint}/formrecognizer/documentModels/${model}:analyze?api-version=2023-07-31`
   console.log(`Analyzing document with model ${model}`)
   try {
     const res = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/octet-stream',
+        'Content-Type': contentType,
         'Ocp-Apim-Subscription-Key': key
       },
       body: file
