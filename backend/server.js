@@ -1,5 +1,16 @@
-require('dotenv').config();
-const express = require('express');
+require('dotenv').config()
+
+const {
+  AZURE_DOC_INTELLIGENCE_ENDPOINT,
+  AZURE_DOC_INTELLIGENCE_KEY
+} = process.env
+
+if (!AZURE_DOC_INTELLIGENCE_ENDPOINT || !AZURE_DOC_INTELLIGENCE_KEY) {
+  console.error('Missing Azure Document Intelligence configuration')
+  process.exit(1)
+}
+
+const express = require('express')
 const cors = require('cors');
 const multer = require('multer');
 const Tesseract = require('tesseract.js');

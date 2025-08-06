@@ -4,6 +4,8 @@ jest.mock('tesseract.js', () => ({
   recognize: jest.fn(() => Promise.resolve({ data: { text: '' } })),
 }))
 
+process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT = 'https://example.com'
+process.env.AZURE_DOC_INTELLIGENCE_KEY = 'test-key'
 const app = require('../server')
 
 describe('upload multiple files', () => {
