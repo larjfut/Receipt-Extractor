@@ -20,7 +20,36 @@ const {
   listActiveUsers,
   listContentTypes,
 } = require('./sharepointClient')
-const fieldMapping = require('./fieldMapping.json');
+const fieldMapping = require('./fieldMapping.json')
+const fs = require('fs')
+const path = require('path')
+const { applyTransformations, extractLineItems } = require('./transformUtils')
+
+function loadFieldMapping(name) {
+  if (!name) return null
+  const dir = path.join(__dirname, 'fieldMappings')
+  const files = fs.readdirSync(dir)
+  for (const file of files) {
+    const json = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'))
+    if (json.contentType === name) return json
+  }
+  return null
+}
+
+function validate(value, rule) {
+  if (!rule) return true
+  if (value == null) return false
+  switch (rule) {
+    case 'non-empty':
+      return String(value).trim() !== ''
+    case 'YYYY-MM-DD':
+      return /\d{4}-\d{2}-\d{2}/.test(String(value))
+    case 'currency':
+      return typeof value === 'number' || /^(?:\d+)(?:\.\d+)?$/.test(String(value))
+    default:
+      return true
+  }
+}
 
 // Initialize Express
 const app = express();
@@ -75,24 +104,56 @@ app.post('/api/upload', (req, res) => {
           .json({ success: false, error: 'No files uploaded' })
       }
       const ctRaw = req.body.selectedContentType
-      const selectedContentType = typeof ctRaw === 'string' ? JSON.parse(ctRaw) : ctRaw
-      const model = getDocumentModel(selectedContentType ? selectedContentType.Name : '')
+      const selectedContentType =
+        typeof ctRaw === 'string' ? JSON.parse(ctRaw) : ctRaw
+      const mapping = loadFieldMapping(selectedContentType?.Name)
+      const model =
+        mapping?.model ||
+        getDocumentModel(selectedContentType ? selectedContentType.Name : '')
+      const confidenceThreshold = mapping?.confidenceThreshold ?? 0.75
       const results = await Promise.all(
         req.files.map(async (f) => {
           const result = await analyzeDocument(f.buffer, model, f.mimetype)
           const doc = result.documents && result.documents[0]
           const data = {}
           const confidence = {}
-          if (doc && doc.fields) {
-            Object.entries(doc.fields).forEach(([k, v]) => {
-              if (v.confidence >= 0.75) {
-                const val = v.valueString ?? v.valueNumber ?? v.content
-                if (val !== undefined) {
-                  data[k] = val
-                  confidence[k] = v.confidence
-                }
+          if (doc && doc.fields && mapping?.fields) {
+            mapping.fields.forEach((field) => {
+              const v = doc.fields[field.diField]
+              if (!v) return
+              const threshold = field.confidence ?? confidenceThreshold
+              if (v.confidence < threshold) return
+              const val = v.valueString ?? v.valueNumber ?? v.content
+              if (val == null) return
+              const key = field.stateKey || field.diField
+              data[key] = val
+              confidence[key] = v.confidence
+            })
+            applyTransformations(mapping.fields, data)
+            mapping.fields.forEach((field) => {
+              const key = field.stateKey || field.diField
+              if (data[key] == null) return
+              if (!validate(data[key], field.validation)) {
+                delete data[key]
+                delete confidence[key]
               }
             })
+          }
+          let lineItems = extractLineItems(result.tables, mapping?.lineItems)
+          if (lineItems.length && mapping?.lineItems?.columns) {
+            lineItems = lineItems
+              .map((item) => {
+                const cleaned = {}
+                mapping.lineItems.columns.forEach((col) => {
+                  const val = item[col.name]
+                  if (val == null) return
+                  if (!validate(val, col.validation)) return
+                  cleaned[col.name] = val
+                })
+                return cleaned
+              })
+              .filter((item) => Object.keys(item).length)
+            if (lineItems.length) data.lineItems = lineItems
           }
           return { data, confidence }
         })
