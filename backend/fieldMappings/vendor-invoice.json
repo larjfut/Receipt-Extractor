@@ -1,0 +1,173 @@
+{
+  "contentType": "Purchase Requisition - Vendor Invoice",
+  "model": "prebuilt-invoice",
+  "confidenceThreshold": 0.75,
+  "fields": [
+    {
+      "diField": "VendorName",
+      "spInternalName": "Vendor_x0020_Name_x0028_s_x0029",
+      "label": "Vendor Name(s)",
+      "stateKey": "vendorName",
+      "dataType": "string",
+      "required": true,
+      "validation": "non-empty",
+      "transformation": null,
+      "confidence": 0.75
+    },
+    {
+      "diField": "InvoiceDate",
+      "spInternalName": "Date_x0020_Submitted",
+      "label": "Date Submitted",
+      "stateKey": "invoiceDate",
+      "dataType": "date",
+      "required": true,
+      "validation": "YYYY-MM-DD",
+      "transformation": "dateToISO",
+      "confidence": 0.75
+    },
+    {
+      "diField": "InvoiceTotal",
+      "spInternalName": "Grand_x0020_Total",
+      "label": "Grand Total",
+      "stateKey": "grandTotal",
+      "dataType": "currency",
+      "required": true,
+      "validation": "currency",
+      "transformation": "currencyToFloat",
+      "confidence": 0.75
+    },
+    {
+      "diField": "SubTotal",
+      "spInternalName": "GrandSubtotal",
+      "label": "GrandSubtotal",
+      "stateKey": "subTotal",
+      "dataType": "currency",
+      "required": false,
+      "validation": "currency",
+      "transformation": "currencyToFloat",
+      "confidence": 0.75
+    },
+    {
+      "diField": "TotalTax",
+      "spInternalName": "TotalTax",
+      "label": "TotalTax",
+      "stateKey": "totalTax",
+      "dataType": "currency",
+      "required": false,
+      "validation": "currency",
+      "transformation": "currencyToFloat",
+      "confidence": 0.75
+    },
+    {
+      "diField": "VendorAddress",
+      "spInternalName": "MailingAddressV",
+      "label": "MailingAddressV",
+      "stateKey": "vendorAddress",
+      "dataType": "string",
+      "required": false,
+      "validation": "non-empty",
+      "transformation": null,
+      "confidence": 0.75
+    },
+    {
+      "diField": "InvoiceId",
+      "spInternalName": "Invoice_x0020_Number",
+      "label": "Invoice Number",
+      "stateKey": "invoiceId",
+      "dataType": "string",
+      "required": true,
+      "validation": "non-empty",
+      "transformation": null,
+      "confidence": 0.75
+    }
+  ],
+  "autoPopulated": [
+    {
+      "spInternalName": "Staff_x0020_Name",
+      "stateKey": "staffName",
+      "source": "currentUser",
+      "dataType": "string",
+      "required": true
+    },
+    {
+      "spInternalName": "Department",
+      "stateKey": "department",
+      "source": "userSelection",
+      "dataType": "string",
+      "required": true,
+      "validation": "non-empty"
+    }
+  ],
+  "lineItems": {
+    "columns": [
+      {
+        "name": "Date",
+        "diField": "Date",
+        "dataType": "date",
+        "required": true,
+        "validation": "YYYY-MM-DD",
+        "transformation": "dateToISO",
+        "confidence": 0.75
+      },
+      {
+        "name": "Invoice #",
+        "diField": "InvoiceId",
+        "dataType": "string",
+        "required": true,
+        "validation": "non-empty",
+        "confidence": 0.75
+      },
+      {
+        "name": "Pay to Vendor",
+        "diField": "VendorName",
+        "dataType": "string",
+        "required": true,
+        "validation": "non-empty",
+        "confidence": 0.75
+      },
+      {
+        "name": "Item Description",
+        "diField": "ItemDescription",
+        "dataType": "string",
+        "required": false,
+        "validation": null,
+        "confidence": 0.75
+      },
+      {
+        "name": "GL",
+        "diField": null,
+        "dataType": "string",
+        "required": true,
+        "validation": "non-empty",
+        "manual": true
+      },
+      {
+        "name": "Subtotal",
+        "diField": "SubTotal",
+        "dataType": "currency",
+        "required": false,
+        "validation": "currency",
+        "transformation": "currencyToFloat",
+        "confidence": 0.75
+      },
+      {
+        "name": "Tax",
+        "diField": "TotalTax",
+        "dataType": "currency",
+        "required": false,
+        "validation": "currency",
+        "transformation": "currencyToFloat",
+        "confidence": 0.75
+      },
+      {
+        "name": "Total",
+        "diField": "InvoiceTotal",
+        "dataType": "currency",
+        "required": false,
+        "validation": "currency",
+        "transformation": "currencyToFloat",
+        "confidence": 0.75
+      }
+    ]
+  }
+}
