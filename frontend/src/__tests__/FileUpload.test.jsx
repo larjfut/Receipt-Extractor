@@ -122,7 +122,8 @@ test('shows ready status after quality check', async () => {
   const input = container.querySelector('input[accept="image/*,application/pdf"]')
   const file = new File(['ok'], 'ok.png', { type: 'image/png' })
   await user.upload(input, file)
-  await findByText(/checking/i)
+  const checking = await findByText(/checking/i)
+  await waitFor(() => expect(checking).not.toBeInTheDocument())
   await waitFor(() => expect(container).toHaveTextContent(/ready/i))
 })
 
@@ -133,12 +134,16 @@ test('shows unreadable status with reason', async () => {
     ocrConfidence: 90,
   })
   const user = userEvent.setup()
-  const { container, getByTitle } = render(
+  const { container, findByText, getByTitle } = render(
     <FileUpload onFileSelected={() => {}} />
   )
   const input = container.querySelector('input[accept="image/*,application/pdf"]')
   const file = new File(['bad'], 'bad.png', { type: 'image/png' })
   await user.upload(input, file)
+  const checking = await findByText(/checking/i)
+  await waitFor(() => expect(checking).not.toBeInTheDocument())
   await waitFor(() => expect(container).toHaveTextContent(/unreadable/i))
-  getByTitle(QUALITY_MESSAGES.blur)
+  const icon = getByTitle(QUALITY_MESSAGES.blur)
+  expect(icon).toBeInTheDocument()
+  expect(icon.querySelector('svg')).toBeInTheDocument()
 })
