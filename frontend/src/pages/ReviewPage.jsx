@@ -11,12 +11,18 @@ export default function ReviewPage() {
   const contentType = mapContentType(receipt.contentTypeName)
   const [mapping, setMapping] = useState([])
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState('')
   const navigate = useNavigate()
   const resolveKey = (key, idx = 0) => key.replace('[i]', `[${idx}]`)
 
   useEffect(() => {
     // Fetch field mapping from backend so the form knows which fields to display.
     async function loadMapping() {
+      setLoading(true)
+      setFetchError('')
+      setMapping([])
+      setErrors({})
       try {
         const res = await axios.get(`${API_BASE_URL}/fields`, {
           params: { contentType },
@@ -24,13 +30,16 @@ export default function ReviewPage() {
         setMapping(res.data)
       } catch (e) {
         console.error('Failed to load field mapping', e)
+        setFetchError('Failed to load field mapping')
+      } finally {
+        setLoading(false)
       }
     }
     loadMapping()
-  }, [contentType])
+  }, [contentType, receipt.contentTypeName])
 
   const handleChange = (key, value) => {
-    setReceipt(prev => ({
+    setReceipt((prev) => ({
       ...prev,
       fields: {
         ...prev.fields,
@@ -38,7 +47,7 @@ export default function ReviewPage() {
       },
     }))
     if (errors[key]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const copy = { ...prev }
         delete copy[key]
         return copy
@@ -48,11 +57,14 @@ export default function ReviewPage() {
 
   const validate = () => {
     const newErrors = {}
-    mapping.forEach(field => {
+    mapping.forEach((field) => {
       if (['file[]', 'dataURL'].includes(field.dataType)) return
       const resolvedKey = resolveKey(field.stateKey)
       const value = receipt.fields[resolvedKey]
-      if (field.required && (value === undefined || value === '' || value === null)) {
+      if (
+        field.required &&
+        (value === undefined || value === '' || value === null)
+      ) {
         newErrors[resolvedKey] = `${field.label} is required`
       }
     })
@@ -64,7 +76,7 @@ export default function ReviewPage() {
     if (validate()) navigate('/signature')
   }
 
-  const renderInput = field => {
+  const renderInput = (field) => {
     const resolvedKey = resolveKey(field.stateKey)
     const value = receipt.fields[resolvedKey] || ''
     const commonProps = {
@@ -72,10 +84,11 @@ export default function ReviewPage() {
         'mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm',
       value,
       required: field.required,
-      onChange: e => handleChange(resolvedKey, e.target.value),
+      onChange: (e) => handleChange(resolvedKey, e.target.value),
     }
-    if (field.dataType === 'date') return <input type='date' {...commonProps} />
-    if (field.dataType === 'number') return <input type='number' {...commonProps} />
+    if (field.dataType === 'date') return <input type="date" {...commonProps} />
+    if (field.dataType === 'number')
+      return <input type="number" {...commonProps} />
     if (field.dataType === 'text') return <textarea {...commonProps} />
     if (field.dataType === 'dropdown' || field.dataType === 'lookup') {
       let options = []
@@ -86,8 +99,8 @@ export default function ReviewPage() {
       }
       return (
         <select {...commonProps}>
-          <option value=''>Select...</option>
-          {options.map(opt => (
+          <option value="">Select...</option>
+          {options.map((opt) => (
             <option key={opt} value={opt}>
               {opt}
             </option>
@@ -95,39 +108,51 @@ export default function ReviewPage() {
         </select>
       )
     }
-    return <input type='text' {...commonProps} />
+    return <input type="text" {...commonProps} />
   }
 
   return (
-    <div className='max-w-4xl mx-auto py-8'>
-      <h1 className='text-2xl font-bold mb-4'>Review Extracted Data</h1>
-      <form>
-        {mapping
-          .filter(f => !['file[]', 'dataURL'].includes(f.dataType))
-          .map(field => {
-            const resolvedKey = resolveKey(field.stateKey)
-            return (
-              <div key={field.stateKey} className='mb-4'>
-                <label className='block text-sm font-medium text-gray-700'>
-                  {field.label}
-                  {field.required ? ' *' : ''}
-                </label>
-                {renderInput(field)}
-                {errors[resolvedKey] && (
-                  <p className='text-red-600 text-sm mt-1'>{errors[resolvedKey]}</p>
-                )}
-              </div>
-            )
-          })}
-      </form>
-      <button
-        type='button'
-        onClick={handleNext}
-        className='mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'
-      >
-        Continue to Signature
-      </button>
+    <div className="max-w-4xl mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-4">Review Extracted Data</h1>
+      {fetchError && (
+        <div className="mb-4 rounded border border-red-400 bg-red-100 p-2 text-red-700">
+          {fetchError}
+        </div>
+      )}
+      {loading ? (
+        <p>Loading field mapping...</p>
+      ) : (
+        <>
+          <form>
+            {mapping
+              .filter((f) => !['file[]', 'dataURL'].includes(f.dataType))
+              .map((field) => {
+                const resolvedKey = resolveKey(field.stateKey)
+                return (
+                  <div key={field.stateKey} className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {field.label}
+                      {field.required ? ' *' : ''}
+                    </label>
+                    {renderInput(field)}
+                    {errors[resolvedKey] && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors[resolvedKey]}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+          </form>
+          <button
+            type="button"
+            onClick={handleNext}
+            className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            Continue to Signature
+          </button>
+        </>
+      )}
     </div>
   )
 }
-
