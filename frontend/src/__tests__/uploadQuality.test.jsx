@@ -42,6 +42,7 @@ test('rejects blurry image', async () => {
     target: { files: [file] }
   })
   await screen.findByText(/blurry/i)
+  expect(screen.queryByText(/Attachments Ready for Submit/i)).not.toBeInTheDocument()
   expect(axios.post).not.toHaveBeenCalled()
 })
 
@@ -53,6 +54,7 @@ test('rejects image missing edges', async () => {
     target: { files: [file] }
   })
   await screen.findByText(/receipt edges not detected/i)
+  expect(screen.queryByText(/Attachments Ready for Submit/i)).not.toBeInTheDocument()
   expect(axios.post).not.toHaveBeenCalled()
 })
 
@@ -64,5 +66,21 @@ test('rejects image with low OCR confidence', async () => {
     target: { files: [file] }
   })
   await screen.findByText(QUALITY_MESSAGES.ocr)
+  expect(screen.queryByText(/Attachments Ready for Submit/i)).not.toBeInTheDocument()
   expect(axios.post).not.toHaveBeenCalled()
+})
+
+test('shows attachments ready for submit when quality passes', async () => {
+  checkImageQuality.mockResolvedValue({
+    blurVariance: 200,
+    hasFourEdges: true,
+    ocrConfidence: 90,
+  })
+  const { container } = renderPage()
+  const file = new File(['good'], 'good.jpg', { type: 'image/jpeg' })
+  fireEvent.change(container.querySelector('input[accept="image/*,application/pdf"]'), {
+    target: { files: [file] }
+  })
+  await screen.findByText(/Attachments Ready for Submit/i)
+  expect(screen.getByAltText('ready-0')).toBeInTheDocument()
 })
