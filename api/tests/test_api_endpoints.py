@@ -29,10 +29,24 @@ def wsgi_request(method, path, body=b'', headers=None):
   return status_code, dict(result['headers']), data
 
 
-def test_get_fields():
+def test_get_fields_default():
   status, _, body = wsgi_request('GET', '/fields')
   assert status == 200
-  assert isinstance(json.loads(body), list)
+  fields = json.loads(body)
+  assert any(f['stateKey'] == 'vendorName' for f in fields)
+
+
+def test_get_fields_content_type():
+  status, _, body = wsgi_request('GET', '/fields', headers={'QUERY_STRING': 'contentType=tcfv-card'})
+  assert status == 200
+  fields = json.loads(body)
+  assert fields[0]['stateKey'] == 'fieldA'
+
+
+def test_get_fields_invalid_content_type():
+  status, _, body = wsgi_request('GET', '/fields', headers={'QUERY_STRING': 'contentType=unknown'})
+  assert status == 400
+  assert 'unsupported contentType' in json.loads(body)['error']
 
 
 def test_get_users():
