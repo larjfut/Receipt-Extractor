@@ -11,27 +11,37 @@ export default function SubmitPage() {
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
+    setLoading(true)
+    setError(null)
+    setSuccess(false)
     try {
+      const attachments = await Promise.all(
+        (receipt.attachments || []).map(
+          (file) =>
+            new Promise((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onload = () => {
+                const base64 = reader.result.split(',')[1]
+                resolve({ name: file.name, type: file.type, content: base64 })
+              }
+              reader.onerror = reject
+              reader.readAsDataURL(file)
+            })
+        )
+      )
       await axios.post(`${API_BASE_URL}/submit`, {
         fields: receipt.fields,
-        attachments: receipt.attachments.map((file) => ({
-          name: file.name,
-          type: file.type,
-          // In a real implementation the file content would be uploaded separately.
-        })),
+        attachments,
         signature: receipt.signature,
-      });
-      setSuccess(true);
+      })
+      setSuccess(true)
     } catch (e) {
-      console.error(e);
-      setError(e.response?.data?.error || e.message);
+      console.error(e)
+      setError(e.response?.data?.error || e.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-8">

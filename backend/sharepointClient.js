@@ -64,6 +64,7 @@ async function listActiveUsers() {
  * @param {Object} fields An object keyed by stateKey containing user
  *   populated values.
  * @param {Array} attachments An array of objects describing uploaded files.
+ *   Each object should include `name`, `type`, and a base64 `content` string.
  * @param {string|null} signature A base64 data URL of the signature image.
  */
 async function createPurchaseRequisition(fields, attachments, signature) {
@@ -92,15 +93,12 @@ async function createPurchaseRequisition(fields, attachments, signature) {
     // Upload attachments if provided
     if (attachments && attachments.length > 0) {
       for (const file of attachments) {
-        // In a real implementation you would read the file content and
-        // upload it as an attachment to the list item
+        const contentBytes = Buffer.from(file.content || '', 'base64')
         await graph
-          .api(`/sites/${siteId}/lists/${listId}/items/${item.id}/attachments`)
-          .post({
-            '@microsoft.graph.downloadUrl': file.contentUrl,
-            'name': file.name,
-            'contentType': file.type,
-          });
+          .api(
+            `/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`
+          )
+          .put(contentBytes)
       }
     }
     return item;
