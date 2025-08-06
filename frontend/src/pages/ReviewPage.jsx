@@ -9,6 +9,7 @@ export default function ReviewPage() {
   const { receipt, setReceipt } = useContext(ReceiptContext);
   const [mapping, setMapping] = useState([]);
   const navigate = useNavigate();
+  const resolveKey = (key, idx = 0) => key.replace('[i]', `[${idx}]`)
 
   useEffect(() => {
     // Fetch field mapping from backend so the form knows which fields to display.
@@ -41,20 +42,23 @@ export default function ReviewPage() {
     <div className="max-w-4xl mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Review Extracted Data</h1>
       <form>
-        {mapping.map((field) => (
-          <div key={field.stateKey} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required ? ' *' : ''}
-            </label>
-            <input
-              type="text"
-              value={receipt.fields[field.stateKey] || ''}
-              onChange={(e) => handleChange(field.stateKey, e.target.value)}
-              className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-          </div>
-        ))}
+        {mapping.map((field) => {
+          const resolvedKey = resolveKey(field.stateKey)
+          return (
+            <div key={field.stateKey} className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                {field.label}
+                {field.required ? ' *' : ''}
+              </label>
+              <input
+                type="text"
+                value={receipt.fields[resolvedKey] || ''}
+                onChange={(e) => handleChange(resolvedKey, e.target.value)}
+                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+          )
+        })}
       </form>
       <button
         type="button"

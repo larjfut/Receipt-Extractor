@@ -44,9 +44,14 @@ export default function UploadPage() {
       const resp = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      const fields = Array.isArray(resp.data)
+      const rawFields = Array.isArray(resp.data)
         ? resp.data.reduce((acc, cur) => ({ ...acc, ...(cur.data || {}) }), {})
         : resp.data.data || {}
+      const normalizeKeys = (obj) =>
+        Object.fromEntries(
+          Object.entries(obj).map(([k, v]) => [k.replace('[i]', '[0]'), v])
+        )
+      const fields = normalizeKeys(rawFields)
       setReceipt({
         ...receipt,
         fields,
