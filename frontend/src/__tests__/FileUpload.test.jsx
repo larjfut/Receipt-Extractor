@@ -3,6 +3,7 @@ import { render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import FileUpload from '../components/FileUpload.jsx'
 import { checkImageQuality } from '../utils/imageQuality'
+import { QUALITY_MESSAGES } from '../utils/qualityMessages'
 
 jest.mock('../utils/imageQuality', () => ({
   checkImageQuality: jest.fn(),
@@ -111,4 +112,33 @@ test('renders pdf preview for uploaded pdf', async () => {
   const file = new File(['pdf'], 'test.pdf', { type: 'application/pdf' })
   await user.upload(input, file)
   await waitFor(() => expect(container.querySelector('canvas')).toBeInTheDocument())
+})
+
+test('shows ready status after quality check', async () => {
+  const user = userEvent.setup()
+  const { container, findByText } = render(
+    <FileUpload onFileSelected={() => {}} />
+  )
+  const input = container.querySelector('input[accept="image/*,application/pdf"]')
+  const file = new File(['ok'], 'ok.png', { type: 'image/png' })
+  await user.upload(input, file)
+  await findByText(/checking/i)
+  await waitFor(() => expect(container).toHaveTextContent(/ready/i))
+})
+
+test('shows unreadable status with reason', async () => {
+  checkImageQuality.mockResolvedValueOnce({
+    blurVariance: 10,
+    hasFourEdges: true,
+    ocrConfidence: 90,
+  })
+  const user = userEvent.setup()
+  const { container, getByTitle } = render(
+    <FileUpload onFileSelected={() => {}} />
+  )
+  const input = container.querySelector('input[accept="image/*,application/pdf"]')
+  const file = new File(['bad'], 'bad.png', { type: 'image/png' })
+  await user.upload(input, file)
+  await waitFor(() => expect(container).toHaveTextContent(/unreadable/i))
+  getByTitle(QUALITY_MESSAGES.blur)
 })

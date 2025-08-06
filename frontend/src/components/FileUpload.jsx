@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { checkImageQuality } from '../utils/imageQuality'
+import { QUALITY_MESSAGES } from '../utils/qualityMessages'
+import InfoIcon from './InfoIcon.jsx'
 
 /**
  * Drag-and-drop file upload component. The `onFileSelected` callback receives
@@ -28,12 +30,42 @@ export default function FileUpload({ onFileSelected }) {
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList || [])
     if (!files.length) return
+    const startIndex = previews.length
     const newPreviews = files.map((file) => ({
       url: URL.createObjectURL(file),
       type: file.type,
+      status: 'checking',
+      reason: '',
     }))
     setPreviews((prev) => [...prev, ...newPreviews])
     const results = await Promise.all(files.map(processFile))
+    const updates = results.map(({ quality }) => {
+      let status = 'ready'
+      let reason = ''
+      if (quality) {
+        if (quality.error) {
+          status = 'unreadable'
+          reason = quality.error
+        } else if (!quality.hasFourEdges) {
+          status = 'unreadable'
+          reason = QUALITY_MESSAGES.edges
+        } else if (quality.blurVariance < 100) {
+          status = 'unreadable'
+          reason = QUALITY_MESSAGES.blur
+        } else if (quality.ocrConfidence < 60) {
+          status = 'unreadable'
+          reason = QUALITY_MESSAGES.ocr
+        }
+      }
+      return { status, reason }
+    })
+    setPreviews((prev) => {
+      const updated = [...prev]
+      updates.forEach((u, i) => {
+        updated[startIndex + i] = { ...updated[startIndex + i], ...u }
+      })
+      return updated
+    })
     onFileSelected(results)
   }
 
@@ -83,18 +115,28 @@ export default function FileUpload({ onFileSelected }) {
       </div>
       {previews.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
-          {previews.map((p, i) =>
-            p.type === 'application/pdf' ? (
-              <PdfPreview key={i} url={p.url} />
-            ) : (
-              <img
-                key={i}
-                src={p.url}
-                alt={`preview-${i}`}
-                className="w-20 h-20 object-cover border"
-              />
-            )
-          )}
+          {previews.map((p, i) => (
+            <div key={i} className="flex flex-col items-center">
+              {p.type === 'application/pdf' ? (
+                <PdfPreview url={p.url} />
+              ) : (
+                <img
+                  src={p.url}
+                  alt={`preview-${i}`}
+                  className="w-20 h-20 object-cover border"
+                />
+              )}
+              <div className="text-xs mt-1 text-gray-600 flex items-center gap-1">
+                {p.status === 'checking' && 'Checking...'}
+                {p.status === 'ready' && 'Ready'}
+                {p.status === 'unreadable' && (
+                  <>
+                    Unreadable <InfoIcon message={p.reason} />
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
       <input
