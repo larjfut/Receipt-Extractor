@@ -1,12 +1,18 @@
-const waitForOpenCV = () =>
-  new Promise(resolve => {
-    if (window.cv && window.cv.Mat) resolve(window.cv)
-    else setTimeout(() => waitForOpenCV().then(resolve), 100)
+const waitForOpenCV = (timeout = 5000) =>
+  new Promise((resolve, reject) => {
+    const start = Date.now()
+    const check = () => {
+      if (window.cv && window.cv.Mat) resolve(window.cv)
+      else if (Date.now() - start >= timeout)
+        reject(new Error('OpenCV load timed out'))
+      else setTimeout(check, 100)
+    }
+    check()
   })
 
 export const checkImageQuality = async imageElement => {
-  const cv = await waitForOpenCV()
   try {
+    const cv = await waitForOpenCV()
     const mat = cv.imread(imageElement)
     const gray = new cv.Mat()
     cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY)
@@ -61,6 +67,6 @@ export const checkImageQuality = async imageElement => {
     }
   } catch (error) {
     console.error('Error checking image quality:', error)
-    return { error: 'Failed to analyze image quality' }
+    return { error: error.message || 'Failed to analyze image quality' }
   }
 }
