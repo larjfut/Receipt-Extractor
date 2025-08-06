@@ -78,6 +78,22 @@ LIST_ID=your‑list‑id
 
 At runtime the backend uses these values to obtain an access token via the client credentials grant and to talk to the Microsoft Graph API. See `backend/sharepointClient.js` for the implementation details. When deploying to production you should store secrets securely (e.g. Azure Key Vault) rather than committing them to source control.
 
+### Verify environment configuration
+
+To check that the required variables are present without printing their values, run:
+
+```bash
+cd backend
+node test-env.js
+```
+
+The script reports whether each variable is loaded. To print the actual values (except the client secret, which stays redacted) set an explicit debug flag:
+
+```bash
+cd backend
+DEBUG_ENV=true node test-env.js
+```
+
 ### API base URL
 
 The frontend looks for `VITE_API_BASE_URL` to know where the backend is running. When the variable is not set it defaults to `/api`.
