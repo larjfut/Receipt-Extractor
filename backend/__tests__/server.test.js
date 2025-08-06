@@ -4,6 +4,8 @@ jest.mock('../sharepointClient', () => ({
   listActiveUsers: jest.fn(() => Promise.resolve([])),
 }))
 const { createPurchaseRequisition } = require('../sharepointClient')
+process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT = 'https://example.com'
+process.env.AZURE_DOC_INTELLIGENCE_KEY = 'test-key'
 const app = require('../server')
 const fieldMapping = require('../fieldMapping.json')
 
