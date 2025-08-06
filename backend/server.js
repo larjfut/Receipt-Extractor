@@ -11,10 +11,10 @@ if (!AZURE_DOC_INTELLIGENCE_ENDPOINT || !AZURE_DOC_INTELLIGENCE_KEY) {
 }
 
 const express = require('express')
-const cors = require('cors');
-const multer = require('multer');
-const Tesseract = require('tesseract.js');
-const { parseReceiptData } = require('./parseReceipt');
+const cors = require('cors')
+const multer = require('multer')
+const { analyzeDocument } = require('./docIntelligenceClient')
+const { getDocumentModel } = require('./getDocumentModel')
 const {
   createPurchaseRequisition,
   listActiveUsers,
@@ -59,10 +59,8 @@ app.get('/api/fields', (req, res) => {
 /**
  * POST /api/upload
  *
- * Accepts multiple files, runs OCR on each using Tesseract.js, and returns an
- * array of results keyed by the stateKeys defined in fieldMapping. This
- * endpoint does not persist anything – it simply extracts text and parses
- * basic values.
+ * Accepts multiple files and runs them through Azure Document Intelligence.
+ * Returns an array of objects containing extracted data and confidences.
  */
 app.post('/api/upload', (req, res) => {
   upload.array('files')(req, res, async (err) => {
@@ -76,13 +74,27 @@ app.post('/api/upload', (req, res) => {
           .status(400)
           .json({ success: false, error: 'No files uploaded' })
       }
+      const ctRaw = req.body.selectedContentType
+      const selectedContentType = typeof ctRaw === 'string' ? JSON.parse(ctRaw) : ctRaw
+      const model = getDocumentModel(selectedContentType ? selectedContentType.Name : '')
       const results = await Promise.all(
         req.files.map(async (f) => {
-          const result = await Tesseract.recognize(f.buffer, 'eng', {
-            logger: (m) => console.log(m),
-          })
-          const parsed = parseReceiptData(result.data, fieldMapping)
-          return { success: true, data: parsed, raw: result.data }
+          const result = await analyzeDocument(f.buffer, model, f.mimetype)
+          const doc = result.documents && result.documents[0]
+          const data = {}
+          const confidence = {}
+          if (doc && doc.fields) {
+            Object.entries(doc.fields).forEach(([k, v]) => {
+              if (v.confidence >= 0.75) {
+                const val = v.valueString ?? v.valueNumber ?? v.content
+                if (val !== undefined) {
+                  data[k] = val
+                  confidence[k] = v.confidence
+                }
+              }
+            })
+          }
+          return { data, confidence }
         })
       )
       res.json(results)
