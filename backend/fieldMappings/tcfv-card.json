@@ -1,0 +1,19 @@
+{
+  "contentType": "TCFV Card",
+  "model": "prebuilt-document",
+  "confidenceThreshold": 0.75,
+  "fields": [
+    {
+      "diField": "FieldA",
+      "spInternalName": "FieldA",
+      "label": "Field A",
+      "stateKey": "fieldA",
+      "dataType": "string",
+      "required": true,
+      "validation": "non-empty",
+      "transformation": null,
+      "confidence": 0.75
+    }
+  ]
+}
+

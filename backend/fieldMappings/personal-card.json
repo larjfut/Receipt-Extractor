@@ -1,0 +1,19 @@
+{
+  "contentType": "Personal Card",
+  "model": "prebuilt-document",
+  "confidenceThreshold": 0.75,
+  "fields": [
+    {
+      "diField": "FieldB",
+      "spInternalName": "FieldB",
+      "label": "Field B",
+      "stateKey": "fieldB",
+      "dataType": "string",
+      "required": true,
+      "validation": "non-empty",
+      "transformation": null,
+      "confidence": 0.75
+    }
+  ]
+}
+
