@@ -1,13 +1,15 @@
 import React from 'react'
 import { UserContext } from '../context/UserContext.jsx'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+
 export default function UserHeader() {
   const { user, setUser } = React.useContext(UserContext)
   const [users, setUsers] = React.useState([])
 
   React.useEffect(() => {
     if (!user) {
-      fetch('/api/users')
+      fetch(`${API_BASE_URL}/users`)
         .then(r => r.json())
         .then(data => setUsers(data))
         .catch(err => console.error(err))
