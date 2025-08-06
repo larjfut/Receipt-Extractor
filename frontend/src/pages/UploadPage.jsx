@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { ReceiptContext } from '../context/ReceiptContext.jsx'
@@ -14,6 +14,15 @@ export default function UploadPage() {
   const [error, setError] = useState(null)
   const [inputKey, setInputKey] = useState(0)
   const [readyAttachments, setReadyAttachments] = useState([])
+  const [previewUrls, setPreviewUrls] = useState([])
+
+  useEffect(() => {
+    const urls = readyAttachments.map((file) => URL.createObjectURL(file))
+    setPreviewUrls(urls)
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [readyAttachments])
 
   const handleFileUpload = async (files) => {
     setError(null)
@@ -88,7 +97,7 @@ export default function UploadPage() {
             {readyAttachments.map((file, idx) => (
               <img
                 key={idx}
-                src={URL.createObjectURL(file)}
+                src={previewUrls[idx]}
                 alt={`ready-${idx}`}
                 className="w-24 h-24 object-cover rounded"
               />
