@@ -8,14 +8,14 @@ import { QUALITY_MESSAGES } from '../utils/qualityMessages'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export default function UploadPage() {
-  const { receipt, setReceipt } = useContext(ReceiptContext)
+  const { receipt, setReceipt, contentTypes, setContentTypes } =
+    useContext(ReceiptContext)
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [inputKey, setInputKey] = useState(0)
   const [readyAttachments, setReadyAttachments] = useState([])
   const [previewUrls, setPreviewUrls] = useState([])
-  const [contentTypes, setContentTypes] = useState([])
   const [selectedContentType, setSelectedContentType] = useState(null)
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function UploadPage() {
         : resp.data.data || {}
       const normalizeKeys = (obj) =>
         Object.fromEntries(
-          Object.entries(obj).map(([k, v]) => [k.replace('[i]', '[0]'), v])
+          Object.entries(obj).map(([k, v]) => [k.replace('[i]', '[0]'), v]),
         )
       const fields = normalizeKeys(rawFields)
       setReceipt({
@@ -69,8 +69,10 @@ export default function UploadPage() {
         attachments: [...(receipt.attachments || []), ...readyAttachments],
       })
       setReadyAttachments([])
-      const ctRes = await axios.get(`${API_BASE_URL}/content-types`)
-      setContentTypes(ctRes.data || [])
+      if (!contentTypes.length) {
+        const ctRes = await axios.get(`${API_BASE_URL}/content-types`)
+        setContentTypes(ctRes.data || [])
+      }
     } catch (err) {
       console.error(err)
       setError({
@@ -84,9 +86,7 @@ export default function UploadPage() {
 
   const handleContentTypeChange = (e) => {
     const id = e.target.value
-    const ct = contentTypes.find(
-      (c) => (c.Id?.StringValue || c.Id) === id
-    )
+    const ct = contentTypes.find((c) => (c.Id?.StringValue || c.Id) === id)
     setSelectedContentType(ct)
     setReceipt((prev) => ({
       ...prev,
