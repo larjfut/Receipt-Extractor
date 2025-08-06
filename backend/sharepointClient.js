@@ -54,6 +54,32 @@ async function listActiveUsers() {
 }
 
 /**
+ * List available SharePoint content types for the configured list. When the
+ * client is not configured this returns a stub array to keep the frontend
+ * functional during development.
+ */
+async function listContentTypes() {
+  const graph = getGraphClient()
+  if (!graph) {
+    console.log('SharePoint client not configured. Returning stub content types.')
+    return [
+      { Id: { StringValue: 'stub' }, Name: 'Receipt', Description: 'Stub type' },
+    ]
+  }
+  try {
+    const res = await graph
+      .api(
+        "/_api/web/lists(guid'B2c4a03f0-7c03-493e-91cf-dd82569aa23b')/ContentTypes?$select=Id,Name,Description"
+      )
+      .get()
+    return res.value || []
+  } catch (err) {
+    console.error('Error fetching content types:', err)
+    throw err
+  }
+}
+
+/**
  * Create a new item in the SharePoint list using the Graph API.  The
  * `fields` object is keyed by stateKey; this function must translate it
  * into SharePoint internal names (see fieldMapping.json).  Attachments and
@@ -108,4 +134,4 @@ async function createPurchaseRequisition(fields, attachments, signature) {
   }
 }
 
-module.exports = { createPurchaseRequisition, listActiveUsers }
+module.exports = { createPurchaseRequisition, listActiveUsers, listContentTypes }

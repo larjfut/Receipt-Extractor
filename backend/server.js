@@ -15,7 +15,11 @@ const cors = require('cors');
 const multer = require('multer');
 const Tesseract = require('tesseract.js');
 const { parseReceiptData } = require('./parseReceipt');
-const { createPurchaseRequisition, listActiveUsers } = require('./sharepointClient')
+const {
+  createPurchaseRequisition,
+  listActiveUsers,
+  listContentTypes,
+} = require('./sharepointClient')
 const fieldMapping = require('./fieldMapping.json');
 
 // Initialize Express
@@ -123,6 +127,21 @@ app.get('/api/users', async (req, res) => {
   try {
     const users = await listActiveUsers()
     res.json(users)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/**
+ * GET /api/content-types
+ *
+ * Returns the SharePoint content types available for the configured list.
+ */
+app.get('/api/content-types', async (req, res) => {
+  try {
+    const types = await listContentTypes()
+    res.json(types)
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: err.message })
