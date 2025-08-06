@@ -29,12 +29,22 @@ export default function SubmitPage() {
             })
         )
       )
-      await axios.post(`${API_BASE_URL}/submit`, {
+      const res = await axios.post(`${API_BASE_URL}/submit`, {
         fields: receipt.fields,
         attachments,
         signature: receipt.signature,
+        contentTypeId: receipt.contentTypeId,
       })
       setSuccess(true)
+      const itemId = res.data?.id
+      if (itemId) {
+        const siteUrl = import.meta.env.VITE_SHAREPOINT_SITE_URL
+        const listId = import.meta.env.VITE_SHAREPOINT_LIST_ID
+        if (siteUrl && listId) {
+          const editUrl = `${siteUrl}/_layouts/15/listform.aspx?PageType=6&ListId=${listId}&ID=${itemId}`
+          window.location.href = editUrl
+        }
+      }
     } catch (e) {
       console.error(e)
       setError(e.response?.data?.error || e.message)
