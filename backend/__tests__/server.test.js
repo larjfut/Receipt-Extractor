@@ -1,4 +1,9 @@
 const request = require('supertest')
+jest.mock('../sharepointClient', () => ({
+  createPurchaseRequisition: jest.fn(() => Promise.resolve({ id: 'item' })),
+  listActiveUsers: jest.fn(() => Promise.resolve([])),
+}))
+const { createPurchaseRequisition } = require('../sharepointClient')
 const app = require('../server')
 const fieldMapping = require('../fieldMapping.json')
 
@@ -20,6 +25,23 @@ describe('server routes', () => {
       .send({ fields: {}, attachments: [], signature: null })
     expect(res.status).toBe(200)
     expect(res.body.success).toBe(true)
+  })
+
+  it('passes attachment content to sharepoint client', async () => {
+    const attachment = {
+      name: 'file.txt',
+      type: 'text/plain',
+      content: Buffer.from('hi').toString('base64'),
+    }
+    const res = await request(app)
+      .post('/api/submit')
+      .send({ fields: {}, attachments: [attachment], signature: null })
+    expect(res.status).toBe(200)
+    expect(createPurchaseRequisition).toHaveBeenCalledWith(
+      {},
+      [attachment],
+      null
+    )
   })
 
   it('lists users', async () => {

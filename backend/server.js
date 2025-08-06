@@ -81,22 +81,27 @@ app.post('/api/upload', (req, res) => {
 /**
  * POST /api/submit
  *
- * Accepts a JSON payload containing `fields`, an array of `attachments`, and
- * a `signature` data URL.  It passes the data to the SharePoint client
- * abstraction which performs the Graph API calls.  This implementation
- * currently logs the data and returns a stub response if no Graph
- * credentials are configured.
+ * Accepts a JSON payload containing `fields`, an array of `attachments`
+ * (each with `name`, `type` and base64 `content`), and a `signature` data URL.
+ * It passes the data to the SharePoint client abstraction which performs the
+ * Graph API calls.  This implementation currently logs the data and returns a
+ * stub response if no Graph credentials are configured.
  */
 app.post('/api/submit', async (req, res) => {
   try {
-    const { fields, attachments, signature } = req.body;
-    const response = await createPurchaseRequisition(fields, attachments, signature);
-    res.json({ success: true, response });
+    const { fields, attachments, signature } = req.body
+    const normalized = (attachments || []).map((f) => ({
+      name: f.name,
+      type: f.type,
+      content: f.content,
+    }))
+    const response = await createPurchaseRequisition(fields, normalized, signature)
+    res.json({ success: true, response })
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error(err)
+    res.status(500).json({ success: false, error: err.message })
   }
-});
+})
 
 /**
  * GET /api/users
