@@ -1,6 +1,7 @@
 const mockApiCalls = []
 const mockPost = jest.fn()
 const mockPut = jest.fn()
+const mockGet = jest.fn()
 
 jest.mock('@azure/identity', () => ({
   ClientSecretCredential: jest.fn().mockImplementation(() => ({
@@ -13,7 +14,7 @@ jest.mock('@microsoft/microsoft-graph-client', () => ({
     initWithMiddleware: jest.fn(() => ({
       api: (path) => {
         mockApiCalls.push(path)
-        return { post: mockPost, put: mockPut }
+        return { post: mockPost, put: mockPut, get: mockGet }
       },
     })),
   },
@@ -25,6 +26,7 @@ describe('createPurchaseRequisition attachments', () => {
     mockApiCalls.length = 0
     mockPost.mockReset()
     mockPut.mockReset()
+    mockGet.mockReset()
     process.env.TENANT_ID = 't'
     process.env.CLIENT_ID = 'c'
     process.env.CLIENT_SECRET = 's'
@@ -48,5 +50,25 @@ describe('createPurchaseRequisition attachments', () => {
       '/sites/site/lists/list/items/item1/attachments/file.txt/$value'
     )
     expect(mockPut).toHaveBeenCalledWith(Buffer.from(base64, 'base64'))
+  })
+})
+
+describe('listContentTypes', () => {
+  beforeEach(() => {
+    jest.resetModules()
+    mockApiCalls.length = 0
+    mockGet.mockReset()
+    process.env.TENANT_ID = 't'
+    process.env.CLIENT_ID = 'c'
+    process.env.CLIENT_SECRET = 's'
+  })
+
+  it('fetches content types', async () => {
+    mockGet.mockResolvedValueOnce({ value: [] })
+    const { listContentTypes } = require('../sharepointClient')
+    await listContentTypes()
+    expect(mockApiCalls).toContain(
+      "/_api/web/lists(guid'B2c4a03f0-7c03-493e-91cf-dd82569aa23b')/ContentTypes?$select=Id,Name,Description"
+    )
   })
 })

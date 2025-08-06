@@ -2,6 +2,7 @@ const request = require('supertest')
 jest.mock('../sharepointClient', () => ({
   createPurchaseRequisition: jest.fn(() => Promise.resolve({ id: 'item' })),
   listActiveUsers: jest.fn(() => Promise.resolve([])),
+  listContentTypes: jest.fn(() => Promise.resolve([])),
 }))
 const { createPurchaseRequisition } = require('../sharepointClient')
 process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT = 'https://example.com'
@@ -48,6 +49,12 @@ describe('server routes', () => {
 
   it('lists users', async () => {
     const res = await request(app).get('/api/users')
+    expect(res.status).toBe(200)
+    expect(Array.isArray(res.body)).toBe(true)
+  })
+
+  it('lists content types', async () => {
+    const res = await request(app).get('/api/content-types')
     expect(res.status).toBe(200)
     expect(Array.isArray(res.body)).toBe(true)
   })

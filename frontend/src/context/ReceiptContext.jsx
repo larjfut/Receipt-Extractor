@@ -11,6 +11,8 @@ export function ReceiptProvider({ children }) {
     fields: {},
     attachments: [],
     signature: null,
+    contentTypeId: null,
+    contentTypeName: '',
   });
 
   return (

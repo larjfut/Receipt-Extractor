@@ -15,6 +15,8 @@ export default function UploadPage() {
   const [inputKey, setInputKey] = useState(0)
   const [readyAttachments, setReadyAttachments] = useState([])
   const [previewUrls, setPreviewUrls] = useState([])
+  const [contentTypes, setContentTypes] = useState([])
+  const [selectedContentType, setSelectedContentType] = useState(null)
 
   useEffect(() => {
     const urls = readyAttachments.map((file) => URL.createObjectURL(file))
@@ -67,7 +69,8 @@ export default function UploadPage() {
         attachments: [...(receipt.attachments || []), ...readyAttachments],
       })
       setReadyAttachments([])
-      navigate('/review')
+      const ctRes = await axios.get(`${API_BASE_URL}/content-types`)
+      setContentTypes(ctRes.data || [])
     } catch (err) {
       console.error(err)
       setError({
@@ -77,6 +80,23 @@ export default function UploadPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleContentTypeChange = (e) => {
+    const id = e.target.value
+    const ct = contentTypes.find(
+      (c) => (c.Id?.StringValue || c.Id) === id
+    )
+    setSelectedContentType(ct)
+    setReceipt((prev) => ({
+      ...prev,
+      contentTypeId: id,
+      contentTypeName: ct?.Name || '',
+    }))
+  }
+
+  const handleContinue = () => {
+    navigate('/review')
   }
 
   const handleRetake = () => {
@@ -113,6 +133,40 @@ export default function UploadPage() {
         </div>
       )}
       {loading && <p className="mt-2 text-blue-600">Extracting data…</p>}
+      {contentTypes.length > 0 && (
+        <div className="mt-4">
+          <label className="block mb-2">Content Type</label>
+          <select
+            value={
+              selectedContentType
+                ? selectedContentType.Id?.StringValue || selectedContentType.Id
+                : ''
+            }
+            onChange={handleContentTypeChange}
+            className="border rounded p-2 w-full"
+          >
+            <option value="" disabled>
+              Select a content type
+            </option>
+            {contentTypes.map((ct) => (
+              <option
+                key={ct.Id?.StringValue || ct.Id}
+                value={ct.Id?.StringValue || ct.Id}
+              >
+                {ct.Name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleContinue}
+            disabled={!selectedContentType}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Continue
+          </button>
+        </div>
+      )}
       {error && (
         <div className="mt-2">
           <p className="text-red-600">{error.message}</p>
