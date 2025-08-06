@@ -4,6 +4,7 @@ import UploadPage from '../pages/UploadPage.jsx'
 import { ReceiptContext } from '../context/ReceiptContext.jsx'
 import axios from 'axios'
 import { checkImageQuality } from '../utils/imageQuality'
+import { QUALITY_MESSAGES } from '../utils/qualityMessages'
 import { MemoryRouter } from 'react-router-dom'
 
 jest.mock('axios')
@@ -62,6 +63,6 @@ test('rejects image with low OCR confidence', async () => {
   fireEvent.change(container.querySelector('input[accept="image/*,application/pdf"]'), {
     target: { files: [file] }
   })
-  await screen.findByText(/text is not clear/i)
+  await screen.findByText(QUALITY_MESSAGES.ocr)
   expect(axios.post).not.toHaveBeenCalled()
 })

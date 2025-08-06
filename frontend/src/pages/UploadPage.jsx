@@ -3,14 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { ReceiptContext } from '../context/ReceiptContext.jsx'
 import FileUpload from '../components/FileUpload.jsx'
+import { QUALITY_MESSAGES } from '../utils/qualityMessages'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
-const QUALITY_MESSAGES = {
-  edges:
-    'Receipt edges not detected. Ensure entire receipt is visible and retry.',
-  blur: 'Image too blurry for OCR. Retake with better focus.',
-  ocr: 'Text too blurry for OCR. Retake in better lighting.',
-}
 
 export default function UploadPage() {
   const { receipt, setReceipt } = useContext(ReceiptContext)
