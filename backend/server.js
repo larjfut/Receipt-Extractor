@@ -153,9 +153,8 @@ app.post('/api/upload', (req, res) => {
                 return cleaned
               })
               .filter((item) => Object.keys(item).length)
-            if (lineItems.length) data.lineItems = lineItems
           }
-          return { data, confidence }
+          return { data, confidence, lineItems }
         })
       )
       res.json(results)
