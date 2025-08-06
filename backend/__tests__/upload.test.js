@@ -10,9 +10,9 @@ jest.mock('../docIntelligenceClient', () => ({
             InvoiceTotal: { content: '$10.00', confidence: 0.8 },
             InvoiceDate: { content: '08/06/2025', confidence: 0.8 },
             VendorAddress: { content: '', confidence: 0.9 },
-            InvoiceId: { content: '123', confidence: 0.6 }
-          }
-        }
+            InvoiceId: { content: '123', confidence: 0.6 },
+          },
+        },
       ],
       tables: [
         {
@@ -24,12 +24,12 @@ jest.mock('../docIntelligenceClient', () => ({
             { rowIndex: 0, columnIndex: 2, content: 'Total' },
             { rowIndex: 1, columnIndex: 0, content: '08/06/2025' },
             { rowIndex: 1, columnIndex: 1, content: 'INV-1' },
-            { rowIndex: 1, columnIndex: 2, content: '$10.00' }
-          ]
-        }
-      ]
-    })
-  )
+            { rowIndex: 1, columnIndex: 2, content: '$10.00' },
+          ],
+        },
+      ],
+    }),
+  ),
 }))
 
 process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT = 'https://example.com'
@@ -42,7 +42,7 @@ describe('upload multiple files', () => {
       .post('/api/upload')
       .field(
         'selectedContentType',
-        JSON.stringify({ Name: 'Purchase Requisition - Vendor Invoice' })
+        JSON.stringify({ Name: 'Purchase Requisition - Vendor Invoice' }),
       )
       .attach('files', Buffer.from('one'), 'one.png')
     expect(res.status).toBe(200)
@@ -50,12 +50,16 @@ describe('upload multiple files', () => {
     expect(res.body).toHaveLength(1)
     const first = res.body[0]
     expect(first.data.vendorName).toBe('Vendor Inc')
-    expect(first.data.grandTotal).toBe(10)
-    expect(first.data.invoiceDate).toBe('2025-08-06')
     expect(first.confidence.vendorName).toBe(0.8)
+    expect(first.data.grandTotal).toBe(10)
+    expect(first.confidence.grandTotal).toBe(0.8)
+    expect(first.data.invoiceDate).toBe('2025-08-06')
+    expect(first.confidence.invoiceDate).toBe(0.8)
     expect(first.data.vendorAddress).toBeUndefined()
     expect(first.data.invoiceId).toBeUndefined()
+    expect(first.confidence.invoiceId).toBeUndefined()
     expect(first.lineItems[0].Date).toBe('2025-08-06')
+    expect(first.lineItems[0]['Invoice #']).toBe('INV-1')
     expect(first.lineItems[0].Total).toBe(10)
   })
 })
