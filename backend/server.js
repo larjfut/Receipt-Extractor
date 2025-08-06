@@ -16,7 +16,7 @@ const multer = require('multer')
 const { analyzeDocument } = require('./docIntelligenceClient')
 const { getDocumentModel } = require('./getDocumentModel')
 const {
-  createPurchaseRequisition,
+  createItemWithContentType,
   listActiveUsers,
   listContentTypes,
 } = require('./sharepointClient')
@@ -116,14 +116,18 @@ app.post('/api/upload', (req, res) => {
  */
 app.post('/api/submit', async (req, res) => {
   try {
-    const { fields, attachments, signature } = req.body
+    const { fields, attachments, signature, contentTypeId } = req.body
     const normalized = (attachments || []).map((f) => ({
       name: f.name,
       type: f.type,
       content: f.content,
     }))
-    const response = await createPurchaseRequisition(fields, normalized, signature)
-    res.json({ success: true, response })
+    if (signature) {
+      const base64 = signature.split(',')[1]
+      normalized.push({ name: 'signature.png', type: 'image/png', content: base64 })
+    }
+    const item = await createItemWithContentType(fields, normalized, contentTypeId)
+    res.json({ success: true, id: item.id })
   } catch (err) {
     console.error(err)
     res.status(500).json({ success: false, error: err.message })

@@ -1,10 +1,10 @@
 const request = require('supertest')
 jest.mock('../sharepointClient', () => ({
-  createPurchaseRequisition: jest.fn(() => Promise.resolve({ id: 'item' })),
+  createItemWithContentType: jest.fn(() => Promise.resolve({ id: 'item' })),
   listActiveUsers: jest.fn(() => Promise.resolve([])),
   listContentTypes: jest.fn(() => Promise.resolve([])),
 }))
-const { createPurchaseRequisition } = require('../sharepointClient')
+const { createItemWithContentType } = require('../sharepointClient')
 process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT = 'https://example.com'
 process.env.AZURE_DOC_INTELLIGENCE_KEY = 'test-key'
 const app = require('../server')
@@ -25,7 +25,7 @@ describe('server routes', () => {
   it('submits stub data', async () => {
     const res = await request(app)
       .post('/api/submit')
-      .send({ fields: {}, attachments: [], signature: null })
+      .send({ fields: {}, attachments: [], signature: null, contentTypeId: 'ct' })
     expect(res.status).toBe(200)
     expect(res.body.success).toBe(true)
   })
@@ -38,12 +38,12 @@ describe('server routes', () => {
     }
     const res = await request(app)
       .post('/api/submit')
-      .send({ fields: {}, attachments: [attachment], signature: null })
+      .send({ fields: {}, attachments: [attachment], signature: null, contentTypeId: 'ct' })
     expect(res.status).toBe(200)
-    expect(createPurchaseRequisition).toHaveBeenCalledWith(
+    expect(createItemWithContentType).toHaveBeenCalledWith(
       {},
       [attachment],
-      null
+      'ct'
     )
   })
 

@@ -134,4 +134,50 @@ async function createPurchaseRequisition(fields, attachments, signature) {
   }
 }
 
-module.exports = { createPurchaseRequisition, listActiveUsers, listContentTypes }
+/**
+ * Create a new SharePoint list item with a specific content type and upload
+ * any provided attachments. When Graph credentials are missing this function
+ * logs the request and returns a stub response.
+ *
+ * @param {Object} fields   Key/value pairs for list columns
+ * @param {Array} attachments Array of { name, type, content }
+ * @param {string} contentTypeId SharePoint content type ID
+ */
+async function createItemWithContentType(fields, attachments, contentTypeId) {
+  const graph = getGraphClient()
+  if (!graph || !siteId || !listId) {
+    console.log('SharePoint client not configured.  Skipping actual submission.')
+    console.log('Fields:', fields)
+    console.log('Attachments:', attachments)
+    console.log('Content type:', contentTypeId)
+    return { status: 'stub', message: 'SharePoint not configured' }
+  }
+  const itemPayload = {
+    fields: { ...fields },
+    contentType: { id: contentTypeId }
+  }
+  try {
+    const item = await graph
+      .api(`/sites/${siteId}/lists/${listId}/items`)
+      .post(itemPayload)
+    if (attachments && attachments.length > 0) {
+      for (const file of attachments) {
+        const contentBytes = Buffer.from(file.content || '', 'base64')
+        await graph
+          .api(`/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`)
+          .put(contentBytes)
+      }
+    }
+    return item
+  } catch (err) {
+    console.error('Error creating SharePoint item:', err)
+    throw err
+  }
+}
+
+module.exports = {
+  createPurchaseRequisition,
+  createItemWithContentType,
+  listActiveUsers,
+  listContentTypes,
+}
