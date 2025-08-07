@@ -1,5 +1,5 @@
 import json
-import cgi
+from werkzeug.wrappers import Request
 import logging
 from pathlib import Path
 from urllib.parse import parse_qs
@@ -64,10 +64,8 @@ def app(environ, start_response):
     return [json.dumps(USER_LIST).encode()]
 
   if method == 'POST' and path == '/upload':
-    form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ, keep_blank_values=True)
-    files = form['files'] if 'files' in form else []
-    if not isinstance(files, list):
-      files = [files]
+    request = Request(environ)
+    files = request.files.getlist('files')
     if not files or all(not f.filename for f in files):
       start_response('400 Bad Request', [('Content-Type', 'application/json')])
       return [json.dumps({'error': 'No files uploaded'}).encode()]
