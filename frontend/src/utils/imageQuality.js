@@ -10,6 +10,16 @@ const waitForOpenCV = (timeout = 5000) =>
     check()
   })
 
+let tesseractPromise
+
+const loadTesseract = () => {
+  if (!tesseractPromise)
+    tesseractPromise = import('tesseract.js').then(
+      ({ default: Tesseract }) => Tesseract
+    )
+  return tesseractPromise
+}
+
 export const checkImageQuality = async imageElement => {
   let mat, gray, laplacian, mean, stddev, edges, contours, hierarchy
   try {
@@ -49,7 +59,7 @@ export const checkImageQuality = async imageElement => {
       }
     }
 
-    const { default: Tesseract } = await import('tesseract.js')
+    const Tesseract = await loadTesseract()
     const {
       data: { confidence }
     } = await Tesseract.recognize(imageElement, 'eng')
