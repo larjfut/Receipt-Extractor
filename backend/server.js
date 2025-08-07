@@ -1,9 +1,7 @@
 require('dotenv').config()
 
-const {
-  AZURE_DOC_INTELLIGENCE_ENDPOINT,
-  AZURE_DOC_INTELLIGENCE_KEY
-} = process.env
+const { AZURE_DOC_INTELLIGENCE_ENDPOINT, AZURE_DOC_INTELLIGENCE_KEY } =
+  process.env
 
 if (!AZURE_DOC_INTELLIGENCE_ENDPOINT || !AZURE_DOC_INTELLIGENCE_KEY) {
   console.error('Missing Azure Document Intelligence configuration')
@@ -45,14 +43,16 @@ function validate(value, rule) {
     case 'YYYY-MM-DD':
       return /\d{4}-\d{2}-\d{2}/.test(String(value))
     case 'currency':
-      return typeof value === 'number' || /^(?:\d+)(?:\.\d+)?$/.test(String(value))
+      return (
+        typeof value === 'number' || /^(?:\d+)(?:\.\d+)?$/.test(String(value))
+      )
     default:
       return true
   }
 }
 
 // Initialize Express
-const app = express();
+const app = express()
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -65,25 +65,34 @@ const upload = multer({
       'image/bmp',
       'image/tiff',
       'image/webp',
-      'application/pdf'
+      'application/pdf',
     ]
     if (allowed.includes(file.mimetype)) cb(null, true)
     else cb(new Error('Invalid file type'))
-  }
+  },
 })
 
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(cors())
+app.use(express.json({ limit: '50mb' }))
 
 /**
  * GET /api/fields
  *
  * Returns the array of field definitions used by the frontend to render the
  * review form.  The definitions are loaded from fieldMapping.json.
+ *
+ * If a `contentType` query parameter is provided, a matching mapping is loaded
+ * from the `fieldMappings` directory.
  */
 app.get('/api/fields', (req, res) => {
-  res.json(fieldMapping);
-});
+  const { contentType } = req.query
+  if (contentType) {
+    const mapping = loadFieldMapping(contentType)
+    if (mapping) return res.json(mapping)
+    return res.status(404).json({ error: 'Field mapping not found' })
+  }
+  res.json(fieldMapping)
+})
 
 /**
  * POST /api/upload
@@ -155,7 +164,7 @@ app.post('/api/upload', (req, res) => {
               .filter((item) => Object.keys(item).length)
           }
           return { data, confidence, lineItems }
-        })
+        }),
       )
       res.json(results)
     } catch (err) {
@@ -184,9 +193,17 @@ app.post('/api/submit', async (req, res) => {
     }))
     if (signature) {
       const base64 = signature.split(',')[1]
-      normalized.push({ name: 'signature.png', type: 'image/png', content: base64 })
+      normalized.push({
+        name: 'signature.png',
+        type: 'image/png',
+        content: base64,
+      })
     }
-    const item = await createItemWithContentType(fields, normalized, contentTypeId)
+    const item = await createItemWithContentType(
+      fields,
+      normalized,
+      contentTypeId,
+    )
     res.json({ success: true, id: item.id })
   } catch (err) {
     console.error(err)
@@ -223,8 +240,6 @@ app.get('/api/content-types', async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 })
-
-
 
 module.exports = app
 
