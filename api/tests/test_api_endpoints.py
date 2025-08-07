@@ -32,14 +32,16 @@ def wsgi_request(method, path, body=b'', headers=None):
 def test_get_fields_default():
   status, _, body = wsgi_request('GET', '/fields')
   assert status == 200
-  fields = json.loads(body)
+  resp = json.loads(body)
+  fields = resp['fields']
   assert any(f['stateKey'] == 'vendorName' for f in fields)
 
 
 def test_get_fields_content_type():
   status, _, body = wsgi_request('GET', '/fields', headers={'QUERY_STRING': 'contentType=tcfv-card'})
   assert status == 200
-  fields = json.loads(body)
+  resp = json.loads(body)
+  fields = resp['fields']
   assert fields[0]['stateKey'] == 'vendorName'
 
 

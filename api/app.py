@@ -21,7 +21,9 @@ USER_LIST = [
 ]
 
 
-def load_field_mapping(content_type: str):
+def load_field_mapping(content_type: str | None):
+  if not content_type:
+    content_type = DEFAULT_CONTENT_TYPE
   filename = CONTENT_TYPE_MAP.get(content_type)
   if not filename:
     raise ValueError(f"unsupported contentType '{content_type}'")
@@ -29,7 +31,7 @@ def load_field_mapping(content_type: str):
   logger.debug('loading field mapping from %s', path)
   with path.open() as f:
     data = json.load(f)
-  return data['fields']
+  return data
 
 
 def app(environ, start_response):
@@ -40,7 +42,7 @@ def app(environ, start_response):
     qs = parse_qs(environ.get('QUERY_STRING', ''))
     content_type = qs.get('contentType', [DEFAULT_CONTENT_TYPE])[0]
     try:
-      fields = load_field_mapping(content_type)
+      mapping = load_field_mapping(content_type)
     except ValueError as e:
       logger.warning('invalid contentType %s', content_type)
       start_response('400 Bad Request', [('Content-Type', 'application/json')])
@@ -55,7 +57,7 @@ def app(environ, start_response):
       return [json.dumps({'error': 'Error parsing mapping file'}).encode()]
 
     start_response('200 OK', [('Content-Type', 'application/json')])
-    return [json.dumps(fields).encode()]
+    return [json.dumps({'fields': mapping['fields']}).encode()]
 
   if method == 'GET' and path == '/users':
     start_response('200 OK', [('Content-Type', 'application/json')])
