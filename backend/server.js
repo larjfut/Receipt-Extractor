@@ -19,19 +19,36 @@ const {
   listContentTypes,
 } = require('./sharepointClient')
 const fieldMapping = require('./fieldMapping.json')
-const fs = require('fs')
+const fs = require('fs').promises
 const path = require('path')
 const { applyTransformations, extractLineItems } = require('./transformUtils')
 
-function loadFieldMapping(name) {
-  if (!name) return null
+let fieldMappingsCache
+
+async function loadFieldMappings() {
+  if (fieldMappingsCache) return fieldMappingsCache
+  fieldMappingsCache = {}
   const dir = path.join(__dirname, 'fieldMappings')
-  const files = fs.readdirSync(dir)
-  for (const file of files) {
-    const json = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'))
-    if (json.contentType === name) return json
+  try {
+    const files = await fs.readdir(dir)
+    await Promise.all(
+      files.map(async (file) => {
+        const json = JSON.parse(
+          await fs.readFile(path.join(dir, file), 'utf8')
+        )
+        if (json.contentType) fieldMappingsCache[json.contentType] = json
+      }),
+    )
+  } catch (err) {
+    console.error('Failed to load field mappings', err)
   }
-  return null
+  return fieldMappingsCache
+}
+
+async function loadFieldMapping(name) {
+  if (!name) return null
+  const mappings = await loadFieldMappings()
+  return mappings[name] || null
 }
 
 function validate(value, rule) {
@@ -84,10 +101,10 @@ app.use(express.json({ limit: '50mb' }))
  * If a `contentType` query parameter is provided, a matching mapping is loaded
  * from the `fieldMappings` directory.
  */
-app.get('/api/fields', (req, res) => {
+app.get('/api/fields', async (req, res) => {
   const { contentType } = req.query
   if (contentType) {
-    const mapping = loadFieldMapping(contentType)
+    const mapping = await loadFieldMapping(contentType)
     if (mapping) return res.json(mapping)
     return res.status(404).json({ error: 'Field mapping not found' })
   }
@@ -115,7 +132,7 @@ app.post('/api/upload', (req, res) => {
       const ctRaw = req.body.selectedContentType
       const selectedContentType =
         typeof ctRaw === 'string' ? JSON.parse(ctRaw) : ctRaw
-      const mapping = loadFieldMapping(selectedContentType?.Name)
+      const mapping = await loadFieldMapping(selectedContentType?.Name)
       const model =
         mapping?.model ||
         getDocumentModel(selectedContentType ? selectedContentType.Name : '')
