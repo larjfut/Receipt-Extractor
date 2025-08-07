@@ -9,12 +9,29 @@ process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT = 'https://example.com'
 process.env.AZURE_DOC_INTELLIGENCE_KEY = 'test-key'
 const app = require('../server')
 const fieldMapping = require('../fieldMapping.json')
+const personalCardMapping = require('../fieldMappings/personal-card.json')
 
 describe('server routes', () => {
   it('returns field mapping', async () => {
     const res = await request(app).get('/api/fields')
     expect(res.status).toBe(200)
     expect(res.body).toEqual(fieldMapping)
+  })
+
+  it('returns mapping by content type', async () => {
+    const res = await request(app)
+      .get('/api/fields')
+      .query({ contentType: 'Personal Card' })
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual(personalCardMapping)
+  })
+
+  it('returns 404 for unknown content type', async () => {
+    const res = await request(app)
+      .get('/api/fields')
+      .query({ contentType: 'Unknown' })
+    expect(res.status).toBe(404)
+    expect(res.body.error).toBeDefined()
   })
 
   it('rejects upload without file', async () => {
@@ -25,7 +42,12 @@ describe('server routes', () => {
   it('submits stub data', async () => {
     const res = await request(app)
       .post('/api/submit')
-      .send({ fields: {}, attachments: [], signature: null, contentTypeId: 'ct' })
+      .send({
+        fields: {},
+        attachments: [],
+        signature: null,
+        contentTypeId: 'ct',
+      })
     expect(res.status).toBe(200)
     expect(res.body.success).toBe(true)
   })
@@ -38,12 +60,17 @@ describe('server routes', () => {
     }
     const res = await request(app)
       .post('/api/submit')
-      .send({ fields: {}, attachments: [attachment], signature: null, contentTypeId: 'ct' })
+      .send({
+        fields: {},
+        attachments: [attachment],
+        signature: null,
+        contentTypeId: 'ct',
+      })
     expect(res.status).toBe(200)
     expect(createItemWithContentType).toHaveBeenCalledWith(
       {},
       [attachment],
-      'ct'
+      'ct',
     )
   })
 
