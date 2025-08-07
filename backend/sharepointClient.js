@@ -132,14 +132,16 @@ async function createPurchaseRequisition(fields, attachments, signature) {
       .post(itemPayload)
     // Upload attachments if provided
     if (attachments && attachments.length > 0) {
-      for (const file of attachments) {
-        const contentBytes = Buffer.from(file.content || '', 'base64')
-        await graph
-          .api(
-            `/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`,
-          )
-          .put(contentBytes)
-      }
+      await Promise.all(
+        attachments.map((file) => {
+          const contentBytes = Buffer.from(file.content || '', 'base64')
+          return graph
+            .api(
+              `/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`,
+            )
+            .put(contentBytes)
+        }),
+      )
     }
     return item
   } catch (err) {
@@ -177,14 +179,16 @@ async function createItemWithContentType(fields, attachments, contentTypeId) {
       .api(`/sites/${siteId}/lists/${listId}/items`)
       .post(itemPayload)
     if (attachments && attachments.length > 0) {
-      for (const file of attachments) {
-        const contentBytes = Buffer.from(file.content || '', 'base64')
-        await graph
-          .api(
-            `/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`,
-          )
-          .put(contentBytes)
-      }
+      await Promise.all(
+        attachments.map((file) => {
+          const contentBytes = Buffer.from(file.content || '', 'base64')
+          return graph
+            .api(
+              `/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`,
+            )
+            .put(contentBytes)
+        }),
+      )
     }
     return item
   } catch (err) {
