@@ -24,6 +24,10 @@ export default function FileUpload({ onFileSelected }) {
         URL.revokeObjectURL(img.src)
         resolve({ file, quality })
       }
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src)
+        resolve({ file, quality: { error: 'Failed to load image' } })
+      }
       img.src = URL.createObjectURL(file)
     })
 
