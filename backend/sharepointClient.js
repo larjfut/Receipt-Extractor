@@ -1,15 +1,15 @@
-const { ClientSecretCredential } = require('@azure/identity');
-const { Client } = require('@microsoft/microsoft-graph-client');
-require('isomorphic-fetch');
+const { ClientSecretCredential } = require('@azure/identity')
+const { Client } = require('@microsoft/microsoft-graph-client')
+require('isomorphic-fetch')
 
 // Read configuration from environment variables.  These values must be
 // provided by the operator to enable calls to Microsoft Graph.  When not
 // configured the client will operate in stub mode.
-const tenantId = process.env.TENANT_ID;
-const clientId = process.env.CLIENT_ID;
-const clientSecret = process.env.CLIENT_SECRET;
-const siteId = process.env.SITE_ID;
-const listId = process.env.LIST_ID;
+const tenantId = process.env.TENANT_ID
+const clientId = process.env.CLIENT_ID
+const clientSecret = process.env.CLIENT_SECRET
+const siteId = process.env.SITE_ID
+const listId = process.env.LIST_ID
 
 /**
  * Obtain an authenticated Microsoft Graph client using the client
@@ -19,17 +19,23 @@ const listId = process.env.LIST_ID;
  */
 function getGraphClient() {
   if (!tenantId || !clientId || !clientSecret) {
-    return null;
+    return null
   }
-  const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+  const credential = new ClientSecretCredential(
+    tenantId,
+    clientId,
+    clientSecret,
+  )
   return Client.initWithMiddleware({
     authProvider: {
       getAccessToken: async () => {
-        const token = await credential.getToken('https://graph.microsoft.com/.default');
-        return token.token;
+        const token = await credential.getToken(
+          'https://graph.microsoft.com/.default',
+        )
+        return token.token
       },
     },
-  });
+  })
 }
 
 /**
@@ -60,16 +66,22 @@ async function listActiveUsers() {
  */
 async function listContentTypes() {
   const graph = getGraphClient()
-  if (!graph) {
-    console.log('SharePoint client not configured. Returning stub content types.')
+  if (!graph || !listId) {
+    console.log(
+      'SharePoint client not configured. Returning stub content types.',
+    )
     return [
-      { Id: { StringValue: 'stub' }, Name: 'Receipt', Description: 'Stub type' },
+      {
+        Id: { StringValue: 'stub' },
+        Name: 'Receipt',
+        Description: 'Stub type',
+      },
     ]
   }
   try {
     const res = await graph
       .api(
-        "/_api/web/lists(guid'B2c4a03f0-7c03-493e-91cf-dd82569aa23b')/ContentTypes?$select=Id,Name,Description"
+        `/_api/web/lists(guid'${listId}')/ContentTypes?$select=Id,Name,Description`,
       )
       .get()
     return res.value || []
@@ -96,13 +108,15 @@ async function listContentTypes() {
 async function createPurchaseRequisition(fields, attachments, signature) {
   // If Graph is not configured, just return a stub response.  This makes it
   // safe to develop the frontend without needing credentials.
-  const graph = getGraphClient();
+  const graph = getGraphClient()
   if (!graph || !siteId || !listId) {
-    console.log('SharePoint client not configured.  Skipping actual submission.');
-    console.log('Fields:', fields);
-    console.log('Attachments:', attachments);
-    console.log('Signature present:', Boolean(signature));
-    return { status: 'stub', message: 'SharePoint not configured' };
+    console.log(
+      'SharePoint client not configured.  Skipping actual submission.',
+    )
+    console.log('Fields:', fields)
+    console.log('Attachments:', attachments)
+    console.log('Signature present:', Boolean(signature))
+    return { status: 'stub', message: 'SharePoint not configured' }
   }
   // Build the fields payload for the list item.  SharePoint expects the
   // dictionary to be keyed by internal column names.  For this example we
@@ -110,27 +124,27 @@ async function createPurchaseRequisition(fields, attachments, signature) {
   // translated into internal names on the client.  See README for details.
   const itemPayload = {
     fields: { ...fields },
-  };
+  }
   try {
     // Create the list item
     const item = await graph
       .api(`/sites/${siteId}/lists/${listId}/items`)
-      .post(itemPayload);
+      .post(itemPayload)
     // Upload attachments if provided
     if (attachments && attachments.length > 0) {
       for (const file of attachments) {
         const contentBytes = Buffer.from(file.content || '', 'base64')
         await graph
           .api(
-            `/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`
+            `/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`,
           )
           .put(contentBytes)
       }
     }
-    return item;
+    return item
   } catch (err) {
-    console.error('Error creating SharePoint item:', err);
-    throw err;
+    console.error('Error creating SharePoint item:', err)
+    throw err
   }
 }
 
@@ -146,7 +160,9 @@ async function createPurchaseRequisition(fields, attachments, signature) {
 async function createItemWithContentType(fields, attachments, contentTypeId) {
   const graph = getGraphClient()
   if (!graph || !siteId || !listId) {
-    console.log('SharePoint client not configured.  Skipping actual submission.')
+    console.log(
+      'SharePoint client not configured.  Skipping actual submission.',
+    )
     console.log('Fields:', fields)
     console.log('Attachments:', attachments)
     console.log('Content type:', contentTypeId)
@@ -154,7 +170,7 @@ async function createItemWithContentType(fields, attachments, contentTypeId) {
   }
   const itemPayload = {
     fields: { ...fields },
-    contentType: { id: contentTypeId }
+    contentType: { id: contentTypeId },
   }
   try {
     const item = await graph
@@ -164,7 +180,9 @@ async function createItemWithContentType(fields, attachments, contentTypeId) {
       for (const file of attachments) {
         const contentBytes = Buffer.from(file.content || '', 'base64')
         await graph
-          .api(`/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`)
+          .api(
+            `/sites/${siteId}/lists/${listId}/items/${item.id}/attachments/${file.name}/$value`,
+          )
           .put(contentBytes)
       }
     }

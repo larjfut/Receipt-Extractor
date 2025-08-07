@@ -42,12 +42,12 @@ describe('createPurchaseRequisition attachments', () => {
     await createPurchaseRequisition(
       {},
       [{ name: 'file.txt', type: 'text/plain', content: base64 }],
-      null
+      null,
     )
 
     expect(mockApiCalls).toContain('/sites/site/lists/list/items')
     expect(mockApiCalls).toContain(
-      '/sites/site/lists/list/items/item1/attachments/file.txt/$value'
+      '/sites/site/lists/list/items/item1/attachments/file.txt/$value',
     )
     expect(mockPut).toHaveBeenCalledWith(Buffer.from(base64, 'base64'))
   })
@@ -61,6 +61,7 @@ describe('listContentTypes', () => {
     process.env.TENANT_ID = 't'
     process.env.CLIENT_ID = 'c'
     process.env.CLIENT_SECRET = 's'
+    process.env.LIST_ID = 'list'
   })
 
   it('fetches content types', async () => {
@@ -68,7 +69,7 @@ describe('listContentTypes', () => {
     const { listContentTypes } = require('../sharepointClient')
     await listContentTypes()
     expect(mockApiCalls).toContain(
-      "/_api/web/lists(guid'B2c4a03f0-7c03-493e-91cf-dd82569aa23b')/ContentTypes?$select=Id,Name,Description"
+      "/_api/web/lists(guid'list')/ContentTypes?$select=Id,Name,Description",
     )
   })
 })
