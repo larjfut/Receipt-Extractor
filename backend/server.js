@@ -33,9 +33,7 @@ async function loadFieldMappings() {
     const files = await fs.readdir(dir)
     await Promise.all(
       files.map(async (file) => {
-        const json = JSON.parse(
-          await fs.readFile(path.join(dir, file), 'utf8')
-        )
+        const json = JSON.parse(await fs.readFile(path.join(dir, file), 'utf8'))
         if (json.contentType) fieldMappingsCache[json.contentType] = json
       }),
     )
@@ -89,7 +87,8 @@ const upload = multer({
   },
 })
 
-app.use(cors())
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',')
+app.use(cors({ origin: allowedOrigins }))
 app.use(express.json({ limit: '50mb' }))
 
 /**
@@ -135,9 +134,7 @@ app.post('/api/upload', (req, res) => {
         try {
           selectedContentType = JSON.parse(ctRaw)
         } catch (parseErr) {
-          return res
-            .status(400)
-            .json({ error: 'Invalid contentType payload' })
+          return res.status(400).json({ error: 'Invalid contentType payload' })
         }
       }
       const mapping = await loadFieldMapping(selectedContentType?.Name)
