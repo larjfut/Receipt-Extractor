@@ -1,13 +1,15 @@
 import json
 from werkzeug.wrappers import Request
 import logging
+import os
 from pathlib import Path
 from urllib.parse import parse_qs
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-FIELD_MAPPINGS_DIR = Path(__file__).resolve().parent.parent / 'backend' / 'fieldMappings'
+DEFAULT_FIELD_MAPPINGS_DIR = Path(__file__).resolve().parent.parent / 'backend' / 'fieldMappings'
+FIELD_MAPPINGS_DIR = Path(os.environ.get('FIELD_MAPPINGS_DIR', DEFAULT_FIELD_MAPPINGS_DIR))
 CONTENT_TYPE_MAP = {
   'vendor-invoice': 'vendor-invoice.json',
   'tcfv-card': 'tcfv-card.json',
