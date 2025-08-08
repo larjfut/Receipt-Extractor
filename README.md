@@ -5,7 +5,7 @@ This repository contains the **Receipt‑Extractor** application. It is a full�
 The app is split into two parts:
 
 - A **frontend** written with React, Tailwind CSS and React Router. It guides the user through a multi‑step workflow (upload, review, signature and submit) and displays extracted OCR data next to editable fields.
-- A **backend** built with Node.js and Express. It provides endpoints to perform OCR using [Tesseract.js](https://github.com/naptha/tesseract.js), parse the output into the form structure defined in `backend/fieldMapping.json`, and interface with the Microsoft Graph/SharePoint API to create list items and upload attachments.
+- A **backend** built with Node.js and Express. It provides endpoints to perform OCR using Azure Document Intelligence, parse the output into the form structure defined in `backend/fieldMapping.json`, and interface with the Microsoft Graph/SharePoint API to create list items and upload attachments.
 
 ## Quick start
 
@@ -63,6 +63,17 @@ The file `backend/fieldMapping.json` contains an array of objects describing eac
 - **validation** – optional validation rule or description.
 
 The mapping was generated from the comprehensive spreadsheet provided by the Finance team and can be extended by appending new objects to the JSON array.
+
+### Azure Document Intelligence
+
+The backend uses [Azure Document Intelligence](https://learn.microsoft.com/azure/ai-services/document-intelligence/) for OCR. Set the following environment variables so the service can authenticate:
+
+```
+AZURE_DOC_INTELLIGENCE_ENDPOINT=https://<your-resource-name>.cognitiveservices.azure.com
+AZURE_DOC_INTELLIGENCE_KEY=your-doc-intelligence-key
+```
+
+These variables are required for document analysis requests.
 
 ### SharePoint/Graph API
 
