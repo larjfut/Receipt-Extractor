@@ -1,12 +1,5 @@
 import { checkImageQuality } from './imageQuality'
 
-jest.mock('tesseract.js', () => ({
-  __esModule: true,
-  default: {
-    recognize: jest.fn(() => Promise.reject(new Error('OCR failed')))
-  }
-}))
-
 test('deletes mats when analysis fails', async () => {
   const mats = []
   const matVectors = []
@@ -52,6 +45,18 @@ test('deletes mats when analysis fails', async () => {
   const originalWindow = global.window
   global.window = { cv }
 
+  class MockWorker {
+    constructor () {
+      this.postMessage = jest.fn(() => {
+        this.onmessage({ data: { error: 'OCR failed' } })
+      })
+      this.terminate = jest.fn()
+    }
+  }
+
+  const originalWorker = global.Worker
+  global.Worker = MockWorker
+
   const result = await checkImageQuality({})
   expect(result.error).toBe('OCR failed')
   expect(mats).toHaveLength(7)
@@ -59,6 +64,7 @@ test('deletes mats when analysis fails', async () => {
   expect(matVectors).toHaveLength(1)
   matVectors.forEach(mv => expect(mv.delete).toHaveBeenCalledTimes(1))
 
+  global.Worker = originalWorker
   global.window = originalWindow
 })
 
