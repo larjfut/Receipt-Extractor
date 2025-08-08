@@ -35,6 +35,7 @@ This repo only contains source code; dependencies are not vendored. To get up an
 
    ```bash
    cd frontend
+   # Copy `.env.example` to `.env` and update values as needed
    npm run dev
    ```
 
@@ -108,7 +109,7 @@ DEBUG_ENV=true node test-env.js
 
 ### API base URL
 
-The frontend looks for `VITE_API_BASE_URL` to know where the backend is running. When the variable is not set it defaults to `/api`.
+The frontend looks for `VITE_API_BASE_URL` to know where the backend is running. Copy `frontend/.env.example` to `frontend/.env` and set the value as needed. When the variable is not set it defaults to `/api`.
 
 ```bash
 # frontend/.env
