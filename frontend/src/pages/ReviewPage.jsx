@@ -2,7 +2,9 @@ import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ReceiptContext } from "../context/ReceiptContext.jsx";
+import { parseFieldValidation } from "../utils/parseFieldValidation";
 
+const options = parseFieldValidation(field.validation);
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 export default function ReviewPage() {
