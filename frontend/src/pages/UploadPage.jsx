@@ -22,6 +22,7 @@ export default function UploadPage() {
   const [readyAttachments, setReadyAttachments] = useState([])
   const [previewUrls, setPreviewUrls] = useState([])
   const [selectedContentType, setSelectedContentType] = useState(null)
+  const [rejectedFiles, setRejectedFiles] = useState([])
 
   useEffect(() => {
     const urls = readyAttachments.map((file) => URL.createObjectURL(file))
@@ -33,22 +34,20 @@ export default function UploadPage() {
 
   const handleFileUpload = async (files) => {
     setError(null)
-    let qualityMessage = null
+    setRejectedFiles([])
+    const accepted = []
+    const rejected = []
     for (const { file, quality } of files) {
-      if (quality?.error) qualityMessage = quality.error
-      else if (!quality?.hasFourEdges) qualityMessage = QUALITY_MESSAGES.edges
-      else if (quality.blurVariance < 100)
-        qualityMessage = QUALITY_MESSAGES.blur
-      else if (quality.ocrConfidence < 60) qualityMessage = QUALITY_MESSAGES.ocr
-      if (qualityMessage) break
+      let reason = null
+      if (quality?.error) reason = quality.error
+      else if (!quality?.hasFourEdges) reason = QUALITY_MESSAGES.edges
+      else if (quality.blurVariance < 100) reason = QUALITY_MESSAGES.blur
+      else if (quality.ocrConfidence < 60) reason = QUALITY_MESSAGES.ocr
+      if (reason) rejected.push({ name: file.name, reason })
+      else accepted.push(file)
     }
-
-    if (qualityMessage) {
-      setError({ type: "quality", message: qualityMessage })
-      return
-    }
-
-    setReadyAttachments((prev) => [...prev, ...files.map((f) => f.file)])
+    if (rejected.length) setRejectedFiles(rejected)
+    if (accepted.length) setReadyAttachments((prev) => [...prev, ...accepted])
   }
 
   const uploadReadyAttachments = async () => {
@@ -102,6 +101,7 @@ export default function UploadPage() {
 
   const handleRetake = () => {
     setError(null)
+    setRejectedFiles([])
     setInputKey((k) => k + 1)
   }
 
@@ -168,18 +168,28 @@ export default function UploadPage() {
           </button>
         </div>
       )}
+      {rejectedFiles.length > 0 && (
+        <div className="mt-2">
+          <p className="text-yellow-600">Some files were rejected:</p>
+          <ul className="text-yellow-600 list-disc list-inside">
+            {rejectedFiles.map((f, i) => (
+              <li key={i}>
+                {f.name}: {f.reason}
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={handleRetake}
+            className="mt-2 px-4 py-2 bg-gray-200 rounded"
+          >
+            Retake
+          </button>
+        </div>
+      )}
       {error && (
         <div className="mt-2">
           <p className="text-red-600">{error.message}</p>
-          {error.type === "quality" && (
-            <button
-              type="button"
-              onClick={handleRetake}
-              className="mt-2 px-4 py-2 bg-gray-200 rounded"
-            >
-              Retake
-            </button>
-          )}
         </div>
       )}
     </div>
