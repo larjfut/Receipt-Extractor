@@ -130,8 +130,16 @@ app.post('/api/upload', (req, res) => {
           .json({ success: false, error: 'No files uploaded' })
       }
       const ctRaw = req.body.selectedContentType
-      const selectedContentType =
-        typeof ctRaw === 'string' ? JSON.parse(ctRaw) : ctRaw
+      let selectedContentType = ctRaw
+      if (typeof ctRaw === 'string') {
+        try {
+          selectedContentType = JSON.parse(ctRaw)
+        } catch (parseErr) {
+          return res
+            .status(400)
+            .json({ error: 'Invalid contentType payload' })
+        }
+      }
       const mapping = await loadFieldMapping(selectedContentType?.Name)
       const model =
         mapping?.model ||
