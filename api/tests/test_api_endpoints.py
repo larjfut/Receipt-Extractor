@@ -72,14 +72,28 @@ def test_upload_returns_filename():
   file_content = b'hello'
   body = (
     f'--{boundary}\r\n'
-    'Content-Disposition: form-data; name="files"; filename="test.txt"\r\n'
-    'Content-Type: text/plain\r\n\r\n'
+    'Content-Disposition: form-data; name="files"; filename="test.png"\r\n'
+    'Content-Type: image/png\r\n\r\n'
   ).encode() + file_content + f'\r\n--{boundary}--\r\n'.encode()
   headers = {'CONTENT_TYPE': f'multipart/form-data; boundary={boundary}'}
   status, _, body = wsgi_request('POST', '/upload', body, headers)
   assert status == 200
   data = json.loads(body)
-  assert data[0]['data']['filename'] == 'test.txt'
+  assert data[0]['data']['filename'] == 'test.png'
+
+
+def test_upload_rejects_disallowed_mimetype():
+  boundary = 'BOUND'
+  file_content = b'nope'
+  body = (
+    f'--{boundary}\r\n'
+    'Content-Disposition: form-data; name="files"; filename="test.txt"\r\n'
+    'Content-Type: text/plain\r\n\r\n'
+  ).encode() + file_content + f'\r\n--{boundary}--\r\n'.encode()
+  headers = {'CONTENT_TYPE': f'multipart/form-data; boundary={boundary}'}
+  status, _, body = wsgi_request('POST', '/upload', body, headers)
+  assert status == 415
+  assert 'Unsupported file type' in json.loads(body)['error']
 
 
 def test_submit_endpoint():

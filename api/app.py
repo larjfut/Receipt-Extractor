@@ -20,6 +20,8 @@ USER_LIST = [
   {'id': '2', 'displayName': 'Bob'}
 ]
 
+ALLOWED_MIMETYPES = {'application/pdf'}
+
 
 def load_field_mapping(content_type: str | None):
   if not content_type:
@@ -69,6 +71,12 @@ def app(environ, start_response):
     if not files or all(not f.filename for f in files):
       start_response('400 Bad Request', [('Content-Type', 'application/json')])
       return [json.dumps({'error': 'No files uploaded'}).encode()]
+    for f in files:
+      if f.filename:
+        mt = f.mimetype
+        if not (mt.startswith('image/') or mt in ALLOWED_MIMETYPES):
+          start_response('415 Unsupported Media Type', [('Content-Type', 'application/json')])
+          return [json.dumps({'error': f"Unsupported file type '{mt}'"}).encode()]
     data = [{'success': True, 'data': {'filename': f.filename}} for f in files if f.filename]
     start_response('200 OK', [('Content-Type', 'application/json')])
     return [json.dumps(data).encode()]
