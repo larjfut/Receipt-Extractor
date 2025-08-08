@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ReceiptContext } from "../context/ReceiptContext.jsx";
 import { parseFieldValidation } from "../utils/parseFieldValidation";
-
-const options = parseFieldValidation(field.validation);
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 export default function ReviewPage() {
@@ -59,7 +57,10 @@ export default function ReviewPage() {
       if (["file[]", "dataURL"].includes(field.dataType)) return;
       const resolvedKey = resolveKey(field.stateKey);
       const value = receipt.fields[resolvedKey];
-      if (field.required && (value === undefined || value === "" || value === null)) {
+      if (
+        field.required &&
+        (value === undefined || value === "" || value === null)
+      ) {
         newErrors[resolvedKey] = `${field.label} is required`;
       }
     });
@@ -82,16 +83,11 @@ export default function ReviewPage() {
     };
 
     if (field.dataType === "date") return <input type="date" {...baseProps} />;
-    if (field.dataType === "number") return <input type="number" {...baseProps} />;
-    if (field.dataType === "text")
-      return <textarea rows={3} {...baseProps} />;
+    if (field.dataType === "number")
+      return <input type="number" {...baseProps} />;
+    if (field.dataType === "text") return <textarea rows={3} {...baseProps} />;
     if (field.dataType === "dropdown" || field.dataType === "lookup") {
-      let options = [];
-      if (field.validation && field.validation.trim().startsWith("[")) {
-        try {
-          options = JSON.parse(field.validation.replace(/'/g, '"'));
-        } catch {}
-      }
+      const options = parseFieldValidation(field.validation);
       return (
         <select {...baseProps}>
           <option value="">Select…</option>
@@ -153,7 +149,9 @@ export default function ReviewPage() {
                   <div key={field.stateKey} className="mb-5">
                     <label className="block text-sm font-medium text-readable mb-1">
                       {field.label}
-                      {field.required && <span className="text-red-400"> *</span>}
+                      {field.required && (
+                        <span className="text-red-400"> *</span>
+                      )}
                     </label>
                     {renderInput(field)}
                     {errors[resolvedKey] && (
