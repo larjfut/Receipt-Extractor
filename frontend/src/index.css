@@ -1,3 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg: #0b0f1a;
+  --surface: #12192a;
+  --surface-2: #1a2237;
+  --brand: #6e60ff;
+  --brand-2: #ff69a6;
+  --text: #e8edf7;
+  --text-muted: #afbbd4;
+  --ok: #2ad38e;
+  --warn: #f6b73c;
+  --err: #ff5b6e;
+  --radius: 16px;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.24);
+  --shadow-2: 0 6px 16px rgba(0, 0, 0, 0.28), 0 24px 48px rgba(0, 0, 0, 0.32);
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue',
+    Arial;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.gradient-purple {
+  background: radial-gradient(1200px 800px at 10% -10%, #2b2353 0, #0b0f1a 60%);
+}
+.gradient-purple-dark {
+  background: linear-gradient(90deg, #2b2353, #1b153f);
+}
+
+.text-readable-white {
+  color: var(--text);
+}
+.text-readable-white-light {
+  color: var(--text-muted);
+}
+
+.hoverable {
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.hoverable:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
+}
+
+.btn-modern {
+  background: linear-gradient(90deg, var(--brand), #9a8cff);
+  color: white;
+  border-radius: 12px;
+  padding: 0.875rem 1.1rem;
+  font-weight: 700;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-1);
+}
+.btn-modern:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade 0.28s ease-out;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Helpers for cards, inputs, secondary button, and soft gradients */
+.modern-card {
+  background: color-mix(in oklab, var(--surface), white 6%);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+  padding: 1.25rem;
+}
+
+.form-input-modern {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--surface-2), white 6%);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text);
+}
+
+.form-input-modern:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--brand), white 25%);
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  background: color-mix(in oklab, var(--surface-2), white 6%);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(255,255,255,.08);
+  transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease;
+  box-shadow: var(--shadow-1);
+}
+
+.gradient-cream {
+  background: linear-gradient(90deg, rgba(255,245,230,.16), rgba(255,255,255,.04));
+}
+
+.gradient-pink {
+  background: linear-gradient(90deg, rgba(255,105,150,.22), rgba(110,96,255,.18));
+}
+
+.gradient-orange {
+  background: linear-gradient(135deg, #ffb86b, #ff6a88);
+  color: #fff;
+}
