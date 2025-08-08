@@ -62,4 +62,13 @@ describe('upload multiple files', () => {
     expect(first.lineItems[0]['Invoice #']).toBe('INV-1')
     expect(first.lineItems[0].Total).toBe(10)
   })
+
+  it('returns 400 for invalid selectedContentType payload', async () => {
+    const res = await request(app)
+      .post('/api/upload')
+      .field('selectedContentType', '{ invalid')
+      .attach('files', Buffer.from('one'), 'one.png')
+    expect(res.status).toBe(400)
+    expect(res.body).toEqual({ error: 'Invalid contentType payload' })
+  })
 })
