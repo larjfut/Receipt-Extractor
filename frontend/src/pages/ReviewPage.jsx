@@ -2,13 +2,11 @@ import React, { useContext, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { ReceiptContext } from '../context/ReceiptContext.jsx'
-import { mapContentType } from '../utils/mapContentType'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export default function ReviewPage() {
   const { receipt, setReceipt } = useContext(ReceiptContext)
-  const contentType = mapContentType(receipt.contentTypeName)
   const [mapping, setMapping] = useState([])
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -25,9 +23,10 @@ export default function ReviewPage() {
       setErrors({})
       try {
         const res = await axios.get(`${API_BASE_URL}/fields`, {
-          params: { contentType },
+          params: { contentType: receipt.contentTypeName },
         })
-        setMapping(res.data)
+        const mapping = res.data.fields || res.data
+        setMapping(mapping)
       } catch (e) {
         console.error('Failed to load field mapping', e)
         setFetchError('Failed to load field mapping')
@@ -36,7 +35,7 @@ export default function ReviewPage() {
       }
     }
     loadMapping()
-  }, [contentType, receipt.contentTypeName])
+  }, [receipt.contentTypeName])
 
   const handleChange = (key, value) => {
     setReceipt((prev) => ({
