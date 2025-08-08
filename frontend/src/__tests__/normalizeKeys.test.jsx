@@ -1,4 +1,4 @@
-import { normalizeKeys } from "../pages/UploadPage.jsx"
+import { normalizeKeys } from "../utils/normalizeKeys"
 
 describe("normalizeKeys", () => {
   test("replaces multiple [i] segments within a single key", () => {

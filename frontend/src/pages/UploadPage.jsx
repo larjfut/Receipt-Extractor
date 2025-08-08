@@ -4,13 +4,9 @@ import axios from "axios";
 import { ReceiptContext } from "../context/ReceiptContext.jsx";
 import FileUpload from "../components/FileUpload.jsx";
 import { QUALITY_MESSAGES } from "../utils/qualityMessages";
+import { normalizeKeys } from "../utils/normalizeKeys";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
-
-export const normalizeKeys = (obj) =>
-  Object.fromEntries(
-    Object.entries(obj).map(([k, v]) => [k.replaceAll("[i]", "[0]"), v]),
-  );
 
 export default function UploadPage() {
   const { receipt, setReceipt, contentTypes, setContentTypes } = useContext(ReceiptContext);
