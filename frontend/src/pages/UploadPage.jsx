@@ -1,11 +1,16 @@
-import React, { useContext, useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
-import { ReceiptContext } from '../context/ReceiptContext.jsx'
-import FileUpload from '../components/FileUpload.jsx'
-import { QUALITY_MESSAGES } from '../utils/qualityMessages'
+import React, { useContext, useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import axios from "axios"
+import { ReceiptContext } from "../context/ReceiptContext.jsx"
+import FileUpload from "../components/FileUpload.jsx"
+import { QUALITY_MESSAGES } from "../utils/qualityMessages"
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api"
+
+export const normalizeKeys = (obj) =>
+  Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k.replace(/\[i\]/g, "[0]"), v]),
+  )
 
 export default function UploadPage() {
   const { receipt, setReceipt, contentTypes, setContentTypes } =
@@ -39,7 +44,7 @@ export default function UploadPage() {
     }
 
     if (qualityMessage) {
-      setError({ type: 'quality', message: qualityMessage })
+      setError({ type: "quality", message: qualityMessage })
       return
     }
 
@@ -51,17 +56,13 @@ export default function UploadPage() {
     setLoading(true)
     try {
       const formData = new FormData()
-      readyAttachments.forEach((file) => formData.append('files', file))
+      readyAttachments.forEach((file) => formData.append("files", file))
       const resp = await axios.post(`${API_BASE_URL}/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { "Content-Type": "multipart/form-data" },
       })
       const rawFields = Array.isArray(resp.data)
         ? resp.data.reduce((acc, cur) => ({ ...acc, ...(cur.data || {}) }), {})
         : resp.data.data || {}
-      const normalizeKeys = (obj) =>
-        Object.fromEntries(
-          Object.entries(obj).map(([k, v]) => [k.replace('[i]', '[0]'), v]),
-        )
       const fields = normalizeKeys(rawFields)
       setReceipt({
         ...receipt,
@@ -76,7 +77,7 @@ export default function UploadPage() {
     } catch (err) {
       console.error(err)
       setError({
-        type: 'backend',
+        type: "backend",
         message: err.response?.data?.error || err.message,
       })
     } finally {
@@ -91,12 +92,12 @@ export default function UploadPage() {
     setReceipt((prev) => ({
       ...prev,
       contentTypeId: id,
-      contentTypeName: ct?.Name || '',
+      contentTypeName: ct?.Name || "",
     }))
   }
 
   const handleContinue = () => {
-    navigate('/review')
+    navigate("/review")
   }
 
   const handleRetake = () => {
@@ -140,7 +141,7 @@ export default function UploadPage() {
             value={
               selectedContentType
                 ? selectedContentType.Id?.StringValue || selectedContentType.Id
-                : ''
+                : ""
             }
             onChange={handleContentTypeChange}
             className="border rounded p-2 w-full"
@@ -170,7 +171,7 @@ export default function UploadPage() {
       {error && (
         <div className="mt-2">
           <p className="text-red-600">{error.message}</p>
-          {error.type === 'quality' && (
+          {error.type === "quality" && (
             <button
               type="button"
               onClick={handleRetake}
