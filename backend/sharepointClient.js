@@ -10,6 +10,7 @@ const clientId = process.env.CLIENT_ID
 const clientSecret = process.env.CLIENT_SECRET
 const siteId = process.env.SITE_ID
 const listId = process.env.LIST_ID
+const debug = process.env.DEBUG_ENV === 'true'
 
 /**
  * Obtain an authenticated Microsoft Graph client using the client
@@ -113,9 +114,11 @@ async function createPurchaseRequisition(fields, attachments, signature) {
     console.log(
       'SharePoint client not configured.  Skipping actual submission.',
     )
-    console.log('Fields:', fields)
-    console.log('Attachments:', attachments)
-    console.log('Signature present:', Boolean(signature))
+    if (debug) {
+      console.log(`Field count: ${Object.keys(fields || {}).length}`)
+      console.log(`Attachment count: ${attachments ? attachments.length : 0}`)
+      console.log(`Signature present: ${Boolean(signature)}`)
+    }
     return { status: 'stub', message: 'SharePoint not configured' }
   }
   // Build the fields payload for the list item.  SharePoint expects the
@@ -165,9 +168,11 @@ async function createItemWithContentType(fields, attachments, contentTypeId) {
     console.log(
       'SharePoint client not configured.  Skipping actual submission.',
     )
-    console.log('Fields:', fields)
-    console.log('Attachments:', attachments)
-    console.log('Content type:', contentTypeId)
+    if (debug) {
+      console.log(`Field count: ${Object.keys(fields || {}).length}`)
+      console.log(`Attachment count: ${attachments ? attachments.length : 0}`)
+      console.log(`Content type: ${contentTypeId}`)
+    }
     return { status: 'stub', message: 'SharePoint not configured' }
   }
   const itemPayload = {
