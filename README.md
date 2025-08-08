@@ -1,6 +1,6 @@
 # Receipt‑Extractor
 
-This repository contains the **Receipt‑Extractor** application. It is a full‑stack tool to help Finance staff capture receipt and invoice data for purchase requisitions and reimbursement requests. Users can upload images or PDF receipts, have the contents automatically parsed into a structured form, make corrections or add missing information, sign the requisition digitally, and finally submit the record to the TCFV SharePoint list (`PR Master List`).
+This repository contains the **Receipt‑Extractor** application. It is a full‑stack tool to help Finance staff capture receipt and invoice data for purchase requisitions and reimbursement requests. Users can upload images or PDF receipts, have the contents automatically parsed into a structured form using Azure Document Intelligence, make corrections or add missing information, sign the requisition digitally, and finally submit the record to the TCFV SharePoint list (`PR Master List`).
 
 The app is split into two parts:
 
@@ -24,7 +24,8 @@ This repo only contains source code; dependencies are not vendored. To get up an
 
    ```bash
    cd backend
-   # Ensure you have configured environment variables – see `.env.example`
+   # Ensure AZURE_DOC_INTELLIGENCE_ENDPOINT and AZURE_DOC_INTELLIGENCE_KEY are set
+   # See `.env.example` for other required variables
    node server.js
    ```
 
