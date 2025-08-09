@@ -31,7 +31,10 @@ function authMiddleware(req, res, next) {
   }
   try {
     const token = header.split(' ')[1]
-    req.user = jwt.verify(token, process.env.JWT_SECRET)
+    // Restrict accepted algorithms to avoid algorithm confusion attacks
+    req.user = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+    })
     next()
   } catch (err) {
     res.status(401).json({ error: 'Unauthorized' })
