@@ -1,4 +1,5 @@
 import React, { createContext, useEffect, useState } from 'react'
+import { msalConfig, getToken } from '../msalConfig'
 
 export const UserContext = createContext({ user: null, setUser: () => {} })
 
@@ -10,20 +11,12 @@ export function UserProvider({ children }) {
     async function load() {
       try {
         const { PublicClientApplication } = await import('@azure/msal-browser')
-        const pca = new PublicClientApplication({
-          auth: {
-            clientId: import.meta.env.VITE_AZURE_CLIENT_ID,
-            authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_TENANT_ID}`
-          }
-        })
+        const pca = new PublicClientApplication(msalConfig)
         await pca.initialize()
         const account = await pca
           .ssoSilent({ scopes: ['User.Read'] })
           .then(r => r.account)
-        const token = await pca.acquireTokenSilent({
-          scopes: ['User.Read'],
-          account
-        })
+        const token = await getToken(pca, account, { scopes: ['User.Read'] })
         if (active)
           setUser({
             id: account?.homeAccountId || null,
