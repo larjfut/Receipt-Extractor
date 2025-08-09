@@ -1,4 +1,5 @@
 const request = require('supertest')
+const jwt = require('jsonwebtoken')
 
 jest.mock('../docIntelligenceClient', () => ({
   analyzeDocument: jest.fn(() =>
@@ -34,12 +35,15 @@ jest.mock('../docIntelligenceClient', () => ({
 
 process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT = 'https://example.com'
 process.env.AZURE_DOC_INTELLIGENCE_KEY = 'test-key'
+process.env.JWT_SECRET = 'test-secret'
+const token = jwt.sign({ sub: 'tester' }, process.env.JWT_SECRET)
 const app = require('../server')
 
 describe('upload multiple files', () => {
   it('applies field mapping and transformations', async () => {
     const res = await request(app)
       .post('/api/upload')
+      .set('Authorization', `Bearer ${token}`)
       .field(
         'selectedContentType',
         JSON.stringify({ Name: 'Purchase Requisition - Vendor Invoice' }),
@@ -66,6 +70,7 @@ describe('upload multiple files', () => {
   it('returns 400 for invalid selectedContentType payload', async () => {
     const res = await request(app)
       .post('/api/upload')
+      .set('Authorization', `Bearer ${token}`)
       .field('selectedContentType', '{ invalid')
       .attach('files', Buffer.from('one'), 'one.png')
     expect(res.status).toBe(400)
@@ -73,12 +78,19 @@ describe('upload multiple files', () => {
   })
 
   it('rejects when too many files are uploaded', async () => {
-    const req = request(app).post('/api/upload')
+    const req = request(app)
+      .post('/api/upload')
+      .set('Authorization', `Bearer ${token}`)
     for (let i = 0; i < 6; i++) {
       req.attach('files', Buffer.from(String(i)), `f${i}.png`)
     }
     const res = await req
     expect(res.status).toBe(400)
     expect(res.body.error).toMatch(/too many files/i)
+  })
+
+  it('requires auth', async () => {
+    const res = await request(app).post('/api/upload')
+    expect(res.status).toBe(401)
   })
 })
