@@ -71,4 +71,14 @@ describe('upload multiple files', () => {
     expect(res.status).toBe(400)
     expect(res.body).toEqual({ error: 'Invalid contentType payload' })
   })
+
+  it('rejects when too many files are uploaded', async () => {
+    const req = request(app).post('/api/upload')
+    for (let i = 0; i < 6; i++) {
+      req.attach('files', Buffer.from(String(i)), `f${i}.png`)
+    }
+    const res = await req
+    expect(res.status).toBe(400)
+    expect(res.body.error).toMatch(/too many files/i)
+  })
 })

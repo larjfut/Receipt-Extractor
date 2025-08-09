@@ -68,9 +68,10 @@ function validate(value, rule) {
 
 // Initialize Express
 const app = express()
+const MAX_FILES = 5
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024, files: MAX_FILES },
   fileFilter: (req, file, cb) => {
     const allowed = [
       'image/png',
@@ -133,13 +134,22 @@ app.post('/api/upload', (req, res) => {
   upload.array('files')(req, res, async (err) => {
     if (err) {
       console.error(err)
-      return res.status(400).json({ success: false, error: err.message })
+      const message =
+        err.code === 'LIMIT_FILE_COUNT'
+          ? 'Too many files uploaded'
+          : err.message
+      return res.status(400).json({ success: false, error: message })
     }
     try {
       if (!req.files || !req.files.length) {
         return res
           .status(400)
           .json({ success: false, error: 'No files uploaded' })
+      }
+      if (req.files.length > MAX_FILES) {
+        return res
+          .status(400)
+          .json({ success: false, error: 'Too many files uploaded' })
       }
       const ctRaw = req.body.selectedContentType
       let selectedContentType = ctRaw
