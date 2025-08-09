@@ -11,6 +11,7 @@ const authProvider =
   config.AUTH_PROVIDER === 'local'
     ? new LocalAuthProvider(config)
     : new MsalAuthProvider(config)
+const { requireJwtAuth } = require('./middleware/authJwt')
 const { analyzeDocument } = require('./docIntelligenceClient')
 const { getDocumentModel } = require('./getDocumentModel')
 const {
@@ -111,6 +112,9 @@ const staticDir = path.resolve(__dirname, '../frontend/dist')
 app.use(express.static(staticDir))
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
 app.use('/auth', authProvider.router)
+
+if (!config.DEMO_MODE && config.AUTH_PROVIDER === 'msal')
+  app.use('/api', requireJwtAuth)
 
 /**
  * GET /api/fields
