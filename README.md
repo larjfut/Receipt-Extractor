@@ -137,6 +137,7 @@ VITE_API_BASE_URL=http://localhost:5000/api
 ### Authentication
 
 Redirect URIs for the Azure AD app must include both your deployed origin (e.g. Vercel) and `http://localhost` for local development. Authentication uses the Authorization Code flow with PKCE via MSAL; no implicit grant is required.
+The frontend reads `VITE_MSAL_CLIENT_ID`, `VITE_MSAL_TENANT_ID` and `VITE_MSAL_REDIRECT_URI` to configure the MSAL client.
 
 ## Running in production
 

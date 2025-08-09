@@ -12,22 +12,22 @@ class MsalAuthProvider extends AuthProvider {
   }
 
   getUserFromRequest(req) {
-    if (this.config.DEMO_MODE) {
+    if (this.config.DEMO_MODE)
       return { id: 'demo', name: 'Demo User', email: 'demo@example.com' }
-    }
-    const header = req.headers.authorization
-    if (!header || !header.startsWith('Bearer ')) return null
-    const token = header.slice(7)
-    try {
-      // In production verify token signature against Azure AD JWKS
-      const decoded = jwt.decode(token)
-      return {
-        id: decoded?.oid || null,
-        name: decoded?.name || null,
-        email: decoded?.preferred_username || null
+    let decoded = req.auth
+    if (!decoded) {
+      const header = req.headers.authorization
+      if (!header || !header.startsWith('Bearer ')) return null
+      try {
+        decoded = jwt.decode(header.slice(7))
+      } catch {
+        return null
       }
-    } catch {
-      return null
+    }
+    return {
+      id: decoded?.oid || null,
+      name: decoded?.name || null,
+      email: decoded?.preferred_username || null
     }
   }
 }
