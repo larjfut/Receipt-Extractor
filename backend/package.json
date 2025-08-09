@@ -15,7 +15,11 @@
     "isomorphic-fetch": "^3.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "2.0.2",
-    "node-fetch": "^2.6.12"
+    "node-fetch": "^2.6.12",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "express-rate-limit": "^7.1.5",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "jest": "^29.7.0",

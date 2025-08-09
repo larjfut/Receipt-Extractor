@@ -41,6 +41,24 @@ This repo only contains source code; dependencies are not vendored. To get up an
 
    This will start Vite on port 5173 (or the next available port) and open the app in your default browser.
 
+## Modes
+
+The application supports demo and production modes controlled by environment variables. See `.env.example` for details.
+
+| Mode | DEMO_MODE | AUTH_PROVIDER |
+| ---- | --------- | ------------- |
+| Demo (no cloud) | true | msal |
+| Local auth | false | local |
+| MSAL | false | msal |
+
+Run the corresponding development scripts:
+
+```bash
+npm run dev:demo
+npm run dev:local
+npm run dev:msal
+```
+
 ## Image Quality Requirements
 
 To ensure receipts are read accurately, uploads must meet basic quality checks:

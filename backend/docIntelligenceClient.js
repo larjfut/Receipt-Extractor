@@ -1,9 +1,13 @@
 const fetch = require('node-fetch')
+const config = require('./src/config')
 
-const endpoint = process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT
-const key = process.env.AZURE_DOC_INTELLIGENCE_KEY
+const endpoint = config.AZURE_DOC_INTELLIGENCE_ENDPOINT
+const key = config.AZURE_DOC_INTELLIGENCE_KEY
 
 async function analyzeDocument(file, model, contentType) {
+  if (config.DEMO_MODE) {
+    return { documents: [] }
+  }
   const url = `${endpoint}/formrecognizer/documentModels/${model}:analyze?api-version=2023-07-31`
   console.log(`Analyzing document with model ${model}`)
   for (let attempt = 0; attempt < 3; attempt++) {
