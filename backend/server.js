@@ -1,24 +1,16 @@
 require('dotenv').config()
 
-const {
-  AZURE_DOC_INTELLIGENCE_ENDPOINT,
-  AZURE_DOC_INTELLIGENCE_KEY,
-  JWT_SECRET,
-} = process.env
-
-if (
-  !AZURE_DOC_INTELLIGENCE_ENDPOINT ||
-  !AZURE_DOC_INTELLIGENCE_KEY ||
-  !JWT_SECRET
-) {
-  console.error('Missing required environment variables')
-  process.exit(1)
-}
-
+const config = require('./src/config')
 const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
-const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
+const LocalAuthProvider = require('./src/auth/LocalAuthProvider')
+const MsalAuthProvider = require('./src/auth/MsalAuthProvider')
+const authProvider =
+  config.AUTH_PROVIDER === 'local'
+    ? new LocalAuthProvider(config)
+    : new MsalAuthProvider(config)
 const { analyzeDocument } = require('./docIntelligenceClient')
 const { getDocumentModel } = require('./getDocumentModel')
 const {
@@ -30,23 +22,6 @@ const fieldMapping = require('./fieldMapping.json')
 const fs = require('fs').promises
 const path = require('path')
 const { applyTransformations, extractLineItems } = require('./transformUtils')
-
-function authMiddleware(req, res, next) {
-  const header = req.headers.authorization
-  if (!header || !header.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
-  try {
-    const token = header.split(' ')[1]
-    // Restrict accepted algorithms to avoid algorithm confusion attacks
-    req.user = jwt.verify(token, process.env.JWT_SECRET, {
-      algorithms: ['HS256'],
-    })
-    next()
-  } catch (err) {
-    res.status(401).json({ error: 'Unauthorized' })
-  }
-}
 
 let fieldMappingsCache
 
@@ -93,6 +68,7 @@ function validate(value, rule) {
 
 // Initialize Express
 const app = express()
+app.use(cookieParser())
 const MAX_FILES = 5
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -113,11 +89,7 @@ const upload = multer({
   },
 })
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-      .map((o) => o.trim())
-      .filter(Boolean)
-  : []
+const allowedOrigins = config.CORS_ORIGIN ? [config.CORS_ORIGIN] : []
 
 if (!allowedOrigins.length)
   console.warn(
@@ -130,9 +102,15 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) callback(null, true)
       else callback(new Error('Not allowed by CORS'))
     },
+    credentials: true,
   }),
 )
 app.use(express.json({ limit: '50mb' }))
+
+const staticDir = path.resolve(__dirname, '../frontend/dist')
+app.use(express.static(staticDir))
+app.get('/health', (req, res) => res.json({ status: 'ok' }))
+app.use('/auth', authProvider.router)
 
 /**
  * GET /api/fields
@@ -143,7 +121,7 @@ app.use(express.json({ limit: '50mb' }))
  * If a `contentType` query parameter is provided, a matching mapping is loaded
  * from the `fieldMappings` directory.
  */
-app.get('/api/fields', async (req, res) => {
+app.get('/api/fields', authProvider.requireAuth, async (req, res) => {
   const { contentType } = req.query
   if (contentType) {
     const mapping = await loadFieldMapping(contentType)
@@ -159,7 +137,7 @@ app.get('/api/fields', async (req, res) => {
  * Accepts multiple files and runs them through Azure Document Intelligence.
  * Returns an array of objects containing extracted data and confidences.
  */
-app.post('/api/upload', authMiddleware, (req, res) => {
+app.post('/api/upload', authProvider.requireAuth, (req, res) => {
   upload.array('files')(req, res, async (err) => {
     if (err) {
       console.error(err)
@@ -257,7 +235,7 @@ app.post('/api/upload', authMiddleware, (req, res) => {
  * Graph API calls.  This implementation currently logs the data and returns a
  * stub response if no Graph credentials are configured.
  */
-app.post('/api/submit', authMiddleware, async (req, res) => {
+app.post('/api/submit', authProvider.requireAuth, async (req, res) => {
   try {
     const { fields, attachments, signature, contentTypeId } = req.body
     const normalized = (attachments || []).map((f) => ({
@@ -290,7 +268,7 @@ app.post('/api/submit', authMiddleware, async (req, res) => {
  *
  * Returns the array of active Azure AD users for manual selection in the UI.
  */
-app.get('/api/users', authMiddleware, async (req, res) => {
+app.get('/api/users', authProvider.requireAuth, async (req, res) => {
   try {
     const users = await listActiveUsers()
     res.json(users)
@@ -305,7 +283,7 @@ app.get('/api/users', authMiddleware, async (req, res) => {
  *
  * Returns the SharePoint content types available for the configured list.
  */
-app.get('/api/content-types', authMiddleware, async (req, res) => {
+app.get('/api/content-types', authProvider.requireAuth, async (req, res) => {
   try {
     const types = await listContentTypes()
     res.json(types)
@@ -315,9 +293,21 @@ app.get('/api/content-types', authMiddleware, async (req, res) => {
   }
 })
 
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/auth'))
+    return next()
+  res.sendFile(path.join(staticDir, 'index.html'))
+})
+
+app.use((req, res) => res.status(404).json({ error: 'Not found' }))
+app.use((err, req, res, next) => {
+  console.error(err)
+  res.status(500).json({ error: err.message })
+})
+
 module.exports = app
 
-const PORT = process.env.PORT || 5000
+const PORT = config.PORT
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Backend server listening on port ${PORT}`)
