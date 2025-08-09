@@ -15,6 +15,15 @@ export default function SubmitPage() {
     setError(null);
     setSuccess(false);
 
+    const siteUrl = import.meta.env.VITE_SHAREPOINT_SITE_URL;
+    const listId = import.meta.env.VITE_SHAREPOINT_LIST_ID;
+    const canRedirect = siteUrl && listId;
+    if (!canRedirect) {
+      alert(
+        "SharePoint configuration is missing. Submission will not redirect.",
+      );
+    }
+
     try {
       const attachments = await Promise.all(
         (receipt.attachments || []).map(
@@ -27,8 +36,8 @@ export default function SubmitPage() {
               };
               reader.onerror = reject;
               reader.readAsDataURL(file);
-            })
-        )
+            }),
+        ),
       );
 
       const res = await axios.post(`${API_BASE_URL}/submit`, {
@@ -41,13 +50,9 @@ export default function SubmitPage() {
       setSuccess(true);
 
       const itemId = res.data?.id;
-      if (itemId) {
-        const siteUrl = import.meta.env.VITE_SHAREPOINT_SITE_URL;
-        const listId = import.meta.env.VITE_SHAREPOINT_LIST_ID;
-        if (siteUrl && listId) {
-          const editUrl = `${siteUrl}/_layouts/15/listform.aspx?PageType=6&ListId=${listId}&ID=${itemId}`;
-          window.location.href = editUrl;
-        }
+      if (itemId && canRedirect) {
+        const editUrl = `${siteUrl}/_layouts/15/listform.aspx?PageType=6&ListId=${listId}&ID=${itemId}`;
+        window.location.href = editUrl;
       }
     } catch (e) {
       console.error(e);
@@ -78,8 +83,8 @@ export default function SubmitPage() {
           {loading
             ? "Submitting…"
             : success
-            ? "Submitted"
-            : "Submit to SharePoint"}
+              ? "Submitted"
+              : "Submit to SharePoint"}
         </button>
 
         {error && (
