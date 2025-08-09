@@ -1,6 +1,6 @@
 {
   "dependencies": {
     "dotenv": "^17.2.1",
-    "tus-js-client": "latest"
+    "tus-js-client": "3.0.0"
   }
 }
