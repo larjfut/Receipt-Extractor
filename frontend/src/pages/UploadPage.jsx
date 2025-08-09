@@ -151,6 +151,14 @@ export default function UploadPage() {
         <FileUpload key={inputKey} onFileSelected={handleFileUpload} />
       </section>
 
+      {readyAttachments.length === 0 && (
+        <section className="modern-card animate-fade-in mb-8 text-center py-12">
+          <p className="text-readable-light">
+            Uploaded files ready for processing will appear here.
+          </p>
+        </section>
+      )}
+
       {readyAttachments.length > 0 && (
         <section className="modern-card animate-fade-in mb-8">
           <div className="flex items-center justify-between mb-4">
