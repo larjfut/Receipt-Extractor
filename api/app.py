@@ -70,6 +70,9 @@ def app(environ, start_response):
 
   if method == 'POST' and path == '/upload':
     request = Request(environ)
+    if not environ.get('HTTP_AUTHORIZATION'):
+      start_response('401 Unauthorized', [('Content-Type', 'application/json')])
+      return [json.dumps({'error': 'Auth required'}).encode()]
     files = request.files.getlist('files')
     if not files or all(not f.filename for f in files):
       start_response('400 Bad Request', [('Content-Type', 'application/json')])

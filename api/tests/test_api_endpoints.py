@@ -67,7 +67,10 @@ def test_get_users():
 def test_upload_requires_file():
   boundary = 'BOUND'
   body = f'--{boundary}--\r\n'.encode()
-  headers = {'CONTENT_TYPE': f'multipart/form-data; boundary={boundary}'}
+  headers = {
+    'CONTENT_TYPE': f'multipart/form-data; boundary={boundary}',
+    'HTTP_AUTHORIZATION': 'Bearer test',
+  }
   status, _, body = wsgi_request('POST', '/upload', body, headers)
   assert status == 400
   assert 'No files' in json.loads(body)['error']
@@ -81,7 +84,10 @@ def test_upload_returns_filename():
     'Content-Disposition: form-data; name="files"; filename="test.png"\r\n'
     'Content-Type: image/png\r\n\r\n'
   ).encode() + file_content + f'\r\n--{boundary}--\r\n'.encode()
-  headers = {'CONTENT_TYPE': f'multipart/form-data; boundary={boundary}'}
+  headers = {
+    'CONTENT_TYPE': f'multipart/form-data; boundary={boundary}',
+    'HTTP_AUTHORIZATION': 'Bearer test',
+  }
   status, _, body = wsgi_request('POST', '/upload', body, headers)
   assert status == 200
   data = json.loads(body)
@@ -96,10 +102,22 @@ def test_upload_rejects_disallowed_mimetype():
     'Content-Disposition: form-data; name="files"; filename="test.txt"\r\n'
     'Content-Type: text/plain\r\n\r\n'
   ).encode() + file_content + f'\r\n--{boundary}--\r\n'.encode()
-  headers = {'CONTENT_TYPE': f'multipart/form-data; boundary={boundary}'}
+  headers = {
+    'CONTENT_TYPE': f'multipart/form-data; boundary={boundary}',
+    'HTTP_AUTHORIZATION': 'Bearer test',
+  }
   status, _, body = wsgi_request('POST', '/upload', body, headers)
   assert status == 415
   assert 'Unsupported file type' in json.loads(body)['error']
+
+
+def test_upload_requires_auth():
+  boundary = 'BOUND'
+  body = f'--{boundary}--\r\n'.encode()
+  headers = {'CONTENT_TYPE': f'multipart/form-data; boundary={boundary}'}
+  status, _, body = wsgi_request('POST', '/upload', body, headers)
+  assert status == 401
+  assert 'Auth required' in json.loads(body)['error']
 
 
 def test_submit_endpoint():

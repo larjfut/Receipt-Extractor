@@ -1,10 +1,17 @@
 require('dotenv').config()
 
-const { AZURE_DOC_INTELLIGENCE_ENDPOINT, AZURE_DOC_INTELLIGENCE_KEY } =
-  process.env
+const {
+  AZURE_DOC_INTELLIGENCE_ENDPOINT,
+  AZURE_DOC_INTELLIGENCE_KEY,
+  JWT_SECRET,
+} = process.env
 
-if (!AZURE_DOC_INTELLIGENCE_ENDPOINT || !AZURE_DOC_INTELLIGENCE_KEY) {
-  console.error('Missing Azure Document Intelligence configuration')
+if (
+  !AZURE_DOC_INTELLIGENCE_ENDPOINT ||
+  !AZURE_DOC_INTELLIGENCE_KEY ||
+  !JWT_SECRET
+) {
+  console.error('Missing required environment variables')
   process.exit(1)
 }
 
@@ -107,11 +114,15 @@ const upload = multer({
 })
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+  ? process.env.ALLOWED_ORIGINS.split(',')
+      .map((o) => o.trim())
+      .filter(Boolean)
   : []
 
 if (!allowedOrigins.length)
-  console.warn('No ALLOWED_ORIGINS specified; requests from unknown origins will be blocked')
+  console.warn(
+    'No ALLOWED_ORIGINS specified; requests from unknown origins will be blocked',
+  )
 
 app.use(
   cors({
