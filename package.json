@@ -1,6 +1,14 @@
 {
+  "scripts": {
+    "test": "npm test --prefix frontend",
+    "ui:test": "playwright test",
+    "ui:login": "playwright test tests/login.setup.ts"
+  },
   "dependencies": {
     "dotenv": "^17.2.1",
     "tus-js-client": "3.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
   }
 }
