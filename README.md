@@ -116,6 +116,10 @@ The frontend looks for `VITE_API_BASE_URL` to know where the backend is running.
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
+### Authentication
+
+Redirect URIs for the Azure AD app must include both your deployed origin (e.g. Vercel) and `http://localhost` for local development. Authentication uses the Authorization Code flow with PKCE via MSAL; no implicit grant is required.
+
 ## Running in production
 
 For production builds run `npm run build` in the `frontend` directory to generate a static build in `frontend/dist`. You can then serve this folder through your preferred HTTP server (Nginx, Express, etc.). The backend can be deployed to any Node‑capable environment; just remember to set the environment variables described above.
