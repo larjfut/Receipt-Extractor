@@ -1,93 +1,95 @@
-import React, { useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { ReceiptContext } from "../context/ReceiptContext.jsx";
-import { parseFieldValidation } from "../utils/parseFieldValidation";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+import React, { useContext, useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import axios from "axios"
+import { ReceiptContext } from "../context/ReceiptContext.jsx"
+import { parseFieldValidation } from "../utils/parseFieldValidation"
+import MappingSkeleton from "../components/MappingSkeleton.jsx"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api"
 
 export default function ReviewPage() {
-  const { receipt, setReceipt } = useContext(ReceiptContext);
-  const [mapping, setMapping] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [fetchError, setFetchError] = useState("");
-  const navigate = useNavigate();
+  const { receipt, setReceipt } = useContext(ReceiptContext)
+  const [mapping, setMapping] = useState([])
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState("")
+  const navigate = useNavigate()
 
-  const resolveKey = (key, idx = 0) => key.replace("[i]", `[${idx}]`);
+  const resolveKey = (key, idx = 0) => key.replace("[i]", `[${idx}]`)
+
+  const loadMapping = async () => {
+    setLoading(true)
+    setFetchError("")
+    setErrors({})
+    try {
+      const res = await axios.get(`${API_BASE_URL}/fields`, {
+        params: { contentType: receipt.contentTypeName },
+      })
+      const mapping = res.data.fields || res.data
+      setMapping(mapping)
+    } catch (e) {
+      console.error("Failed to load field mapping", e)
+      setFetchError("Failed to load field mapping.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    async function loadMapping() {
-      setLoading(true);
-      setFetchError("");
-      setMapping([]);
-      setErrors({});
-      try {
-        const res = await axios.get(`${API_BASE_URL}/fields`, {
-          params: { contentType: receipt.contentTypeName },
-        });
-        const mapping = res.data.fields || res.data;
-        setMapping(mapping);
-      } catch (e) {
-        console.error("Failed to load field mapping", e);
-        setFetchError("Failed to load field mapping.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (receipt.contentTypeName) loadMapping();
-  }, [receipt.contentTypeName]);
+    if (receipt.contentTypeName) loadMapping()
+  }, [receipt.contentTypeName])
 
   const handleChange = (key, value) => {
     setReceipt((prev) => ({
       ...prev,
       fields: { ...prev.fields, [key]: value },
-    }));
+    }))
     if (errors[key]) {
       setErrors((prev) => {
-        const copy = { ...prev };
-        delete copy[key];
-        return copy;
-      });
+        const copy = { ...prev }
+        delete copy[key]
+        return copy
+      })
     }
-  };
+  }
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors = {}
     mapping.forEach((field) => {
-      if (["file[]", "dataURL"].includes(field.dataType)) return;
-      const resolvedKey = resolveKey(field.stateKey);
-      const value = receipt.fields[resolvedKey];
+      if (["file[]", "dataURL"].includes(field.dataType)) return
+      const resolvedKey = resolveKey(field.stateKey)
+      const value = receipt.fields[resolvedKey]
       if (
         field.required &&
         (value === undefined || value === "" || value === null)
       ) {
-        newErrors[resolvedKey] = `${field.label} is required`;
+        newErrors[resolvedKey] = `${field.label} is required`
       }
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    })
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleNext = () => {
-    if (validate()) navigate("/signature");
-  };
+    if (validate()) navigate("/signature")
+  }
 
   const renderInput = (field) => {
-    const resolvedKey = resolveKey(field.stateKey);
-    const value = receipt.fields[resolvedKey] || "";
+    const resolvedKey = resolveKey(field.stateKey)
+    const value = receipt.fields[resolvedKey] || ""
     const baseProps = {
       className: "form-input-modern",
       value,
       required: field.required,
       onChange: (e) => handleChange(resolvedKey, e.target.value),
-    };
+      disabled: loading,
+    }
 
-    if (field.dataType === "date") return <input type="date" {...baseProps} />;
+    if (field.dataType === "date") return <input type="date" {...baseProps} />
     if (field.dataType === "number")
-      return <input type="number" {...baseProps} />;
-    if (field.dataType === "text") return <textarea rows={3} {...baseProps} />;
+      return <input type="number" {...baseProps} />
+    if (field.dataType === "text") return <textarea rows={3} {...baseProps} />
     if (field.dataType === "dropdown" || field.dataType === "lookup") {
-      const options = parseFieldValidation(field.validation);
+      const options = parseFieldValidation(field.validation)
       return (
         <select {...baseProps}>
           <option value="">Select…</option>
@@ -97,10 +99,10 @@ export default function ReviewPage() {
             </option>
           ))}
         </select>
-      );
+      )
     }
-    return <input type="text" {...baseProps} />;
-  };
+    return <input type="text" {...baseProps} />
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-6">
@@ -123,55 +125,57 @@ export default function ReviewPage() {
             <div>
               <h3 className="text-lg font-bold mb-1">Error Loading Fields</h3>
               <p className="text-sm opacity-90">{fetchError}</p>
+              <button
+                type="button"
+                onClick={loadMapping}
+                className="btn-modern mt-4"
+              >
+                Retry
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {loading ? (
-        <div className="modern-card animate-fade-in text-center text-readable-white-light">
-          Loading field mapping…
-        </div>
-      ) : (
-        mapping.length > 0 && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleNext();
-            }}
-            className="modern-card animate-fade-in"
-          >
-            {mapping
-              .filter((f) => !["file[]", "dataURL"].includes(f.dataType))
-              .map((field) => {
-                const resolvedKey = resolveKey(field.stateKey);
-                return (
-                  <div key={field.stateKey} className="mb-5">
-                    <label className="block text-sm font-medium text-readable mb-1">
-                      {field.label}
-                      {field.required && (
-                        <span className="text-red-400"> *</span>
-                      )}
-                    </label>
-                    {renderInput(field)}
-                    {errors[resolvedKey] && (
-                      <p className="mt-1 text-xs text-red-400">
-                        {errors[resolvedKey]}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+      {loading && mapping.length === 0 && <MappingSkeleton />}
 
-            <button
-              type="submit"
-              className="btn-modern w-full hover:scale-105 mt-6"
-            >
-              Continue to Signature
-            </button>
-          </form>
-        )
+      {mapping.length > 0 && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleNext()
+          }}
+          className="modern-card animate-fade-in"
+        >
+          {mapping
+            .filter((f) => !["file[]", "dataURL"].includes(f.dataType))
+            .map((field) => {
+              const resolvedKey = resolveKey(field.stateKey)
+              return (
+                <div key={field.stateKey} className="mb-5">
+                  <label className="block text-sm font-medium text-readable mb-1">
+                    {field.label}
+                    {field.required && <span className="text-red-400"> *</span>}
+                  </label>
+                  {renderInput(field)}
+                  {errors[resolvedKey] && (
+                    <p className="mt-1 text-xs text-red-400">
+                      {errors[resolvedKey]}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+
+          <button
+            type="submit"
+            className="btn-modern w-full hover:scale-105 mt-6"
+            disabled={loading}
+          >
+            Continue to Signature
+          </button>
+        </form>
       )}
     </div>
-  );
+  )
 }
