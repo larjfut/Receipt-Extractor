@@ -11,6 +11,7 @@ if (!AZURE_DOC_INTELLIGENCE_ENDPOINT || !AZURE_DOC_INTELLIGENCE_KEY) {
 const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
+const jwt = require('jsonwebtoken')
 const { analyzeDocument } = require('./docIntelligenceClient')
 const { getDocumentModel } = require('./getDocumentModel')
 const {
@@ -22,6 +23,20 @@ const fieldMapping = require('./fieldMapping.json')
 const fs = require('fs').promises
 const path = require('path')
 const { applyTransformations, extractLineItems } = require('./transformUtils')
+
+function authMiddleware(req, res, next) {
+  const header = req.headers.authorization
+  if (!header || !header.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+  try {
+    const token = header.split(' ')[1]
+    req.user = jwt.verify(token, process.env.JWT_SECRET)
+    next()
+  } catch (err) {
+    res.status(401).json({ error: 'Unauthorized' })
+  }
+}
 
 let fieldMappingsCache
 
@@ -130,7 +145,7 @@ app.get('/api/fields', async (req, res) => {
  * Accepts multiple files and runs them through Azure Document Intelligence.
  * Returns an array of objects containing extracted data and confidences.
  */
-app.post('/api/upload', (req, res) => {
+app.post('/api/upload', authMiddleware, (req, res) => {
   upload.array('files')(req, res, async (err) => {
     if (err) {
       console.error(err)
@@ -228,7 +243,7 @@ app.post('/api/upload', (req, res) => {
  * Graph API calls.  This implementation currently logs the data and returns a
  * stub response if no Graph credentials are configured.
  */
-app.post('/api/submit', async (req, res) => {
+app.post('/api/submit', authMiddleware, async (req, res) => {
   try {
     const { fields, attachments, signature, contentTypeId } = req.body
     const normalized = (attachments || []).map((f) => ({
@@ -261,7 +276,7 @@ app.post('/api/submit', async (req, res) => {
  *
  * Returns the array of active Azure AD users for manual selection in the UI.
  */
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', authMiddleware, async (req, res) => {
   try {
     const users = await listActiveUsers()
     res.json(users)
@@ -276,7 +291,7 @@ app.get('/api/users', async (req, res) => {
  *
  * Returns the SharePoint content types available for the configured list.
  */
-app.get('/api/content-types', async (req, res) => {
+app.get('/api/content-types', authMiddleware, async (req, res) => {
   try {
     const types = await listContentTypes()
     res.json(types)
