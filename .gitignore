@@ -21,3 +21,7 @@ node_modules/
 .vscode/
 *.log
 
+
+# UI testing
+.auth/
+ui-artifacts/
