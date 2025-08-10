@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { render, fireEvent, screen } from '@testing-library/react'
+import { render, fireEvent, screen, act, waitFor } from '@testing-library/react'
 import UploadPage from '../pages/UploadPage.jsx'
 import { ReceiptContext } from '../context/ReceiptContext.jsx'
 import axios from 'axios'
@@ -24,6 +24,7 @@ const renderPage = () =>
 beforeEach(() => {
   axios.post.mockReset()
   global.URL.createObjectURL = jest.fn(() => 'blob:mock')
+  global.URL.revokeObjectURL = jest.fn()
   global.Image = class {
     constructor () {
       setTimeout(() => {
@@ -38,11 +39,17 @@ test('rejects blurry image', async () => {
   checkImageQuality.mockResolvedValue({ blurVariance: 10, hasFourEdges: true, ocrConfidence: 90 })
   const { container } = renderPage()
   const file = new File(['blur'], 'blur.jpg', { type: 'image/jpeg' })
-  fireEvent.change(container.querySelector('input[accept="image/*,application/pdf"]'), {
-    target: { files: [file] }
+  await act(async () => {
+    fireEvent.change(
+      container.querySelector('input[accept="image/*,application/pdf"]'),
+      {
+        target: { files: [file] }
+      }
+    )
   })
-  await screen.findByText(/blurry/i)
-  expect(screen.queryByText(/Attachments Ready for Submit/i)).not.toBeInTheDocument()
+  const blurryMsgs = await screen.findAllByText(/blurry/i)
+  expect(blurryMsgs.length).toBeGreaterThan(0)
+  expect(screen.queryByAltText('ready-0')).not.toBeInTheDocument()
   expect(axios.post).not.toHaveBeenCalled()
 })
 
@@ -50,11 +57,20 @@ test('rejects image missing edges', async () => {
   checkImageQuality.mockResolvedValue({ blurVariance: 200, hasFourEdges: false, ocrConfidence: 90 })
   const { container } = renderPage()
   const file = new File(['edge'], 'edge.jpg', { type: 'image/jpeg' })
-  fireEvent.change(container.querySelector('input[accept="image/*,application/pdf"]'), {
-    target: { files: [file] }
+  await act(async () => {
+    fireEvent.change(
+      container.querySelector('input[accept="image/*,application/pdf"]'),
+      {
+        target: { files: [file] }
+      }
+    )
   })
-  await screen.findByText(/receipt edges not detected/i)
-  expect(screen.queryByText(/Attachments Ready for Submit/i)).not.toBeInTheDocument()
+  await waitFor(() =>
+    expect(
+      screen.getAllByText(/receipt edges not detected/i).length
+    ).toBeGreaterThan(0)
+  )
+  expect(screen.queryByAltText('ready-0')).not.toBeInTheDocument()
   expect(axios.post).not.toHaveBeenCalled()
 })
 
@@ -62,11 +78,16 @@ test('rejects image with low OCR confidence', async () => {
   checkImageQuality.mockResolvedValue({ blurVariance: 200, hasFourEdges: true, ocrConfidence: 20 })
   const { container } = renderPage()
   const file = new File(['ocr'], 'ocr.jpg', { type: 'image/jpeg' })
-  fireEvent.change(container.querySelector('input[accept="image/*,application/pdf"]'), {
-    target: { files: [file] }
+  await act(async () => {
+    fireEvent.change(
+      container.querySelector('input[accept="image/*,application/pdf"]'),
+      {
+        target: { files: [file] }
+      }
+    )
   })
   await screen.findByText(QUALITY_MESSAGES.ocr)
-  expect(screen.queryByText(/Attachments Ready for Submit/i)).not.toBeInTheDocument()
+  expect(screen.queryByAltText('ready-0')).not.toBeInTheDocument()
   expect(axios.post).not.toHaveBeenCalled()
 })
 
@@ -78,9 +99,14 @@ test('shows attachments ready for submit when quality passes', async () => {
   })
   const { container } = renderPage()
   const file = new File(['good'], 'good.jpg', { type: 'image/jpeg' })
-  fireEvent.change(container.querySelector('input[accept="image/*,application/pdf"]'), {
-    target: { files: [file] }
+  await act(async () => {
+    fireEvent.change(
+      container.querySelector('input[accept="image/*,application/pdf"]'),
+      {
+        target: { files: [file] }
+      }
+    )
   })
-  await screen.findByText(/Attachments Ready for Submit/i)
-  expect(screen.getByAltText('ready-0')).toBeInTheDocument()
+  await screen.findByText(/Files Ready for Processing/i)
+  await screen.findByAltText('ready-0')
 })

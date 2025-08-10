@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node server.js",
-    "test": "jest"
+    "build": "tsc -p tsconfig.build.json && cp fieldMapping.json dist/ && cp -r fieldMappings dist/fieldMappings",
+    "start": "node dist/server.js",
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "@azure/identity": "^3.4.0",

@@ -8,9 +8,12 @@ fs.mkdirSync(artifactsDir, { recursive: true })
 
 export default defineConfig({
   testDir: './tests',
+  timeout: 30000,
+  expect: { timeout: 10000 },
+  retries: process.env.CI ? 2 : 0,
   globalSetup: require.resolve('./tests/global.setup'),
   use: {
-    baseURL: process.env.E2E_BASE_URL,
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:4173',
     storageState: '.auth/state.json'
   },
   projects: [
