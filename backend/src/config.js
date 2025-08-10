@@ -1,5 +1,16 @@
 const { z } = require('zod')
 
+const lowerHttpProxy = process.env.http_proxy
+const lowerHttpsProxy = process.env.https_proxy
+if (lowerHttpProxy && !process.env.HTTP_PROXY) {
+  process.env.HTTP_PROXY = lowerHttpProxy
+  delete process.env.http_proxy
+}
+if (lowerHttpsProxy && !process.env.HTTPS_PROXY) {
+  process.env.HTTPS_PROXY = lowerHttpsProxy
+  delete process.env.https_proxy
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production']).default('development'),
   PORT: z.string().regex(/^\d+$/).default('5000'),
@@ -10,10 +21,15 @@ const envSchema = z.object({
   TENANT_ID: z.string().optional(),
   CLIENT_ID: z.string().optional(),
   AZURE_DOC_INTELLIGENCE_ENDPOINT: z.string().optional(),
-  AZURE_DOC_INTELLIGENCE_KEY: z.string().optional()
+  AZURE_DOC_INTELLIGENCE_KEY: z.string().optional(),
+  HTTP_PROXY: z.string().optional(),
+  HTTPS_PROXY: z.string().optional()
 })
 
 const parsed = envSchema.parse(process.env)
+
+if (!parsed.HTTP_PROXY && !parsed.HTTPS_PROXY)
+  console.log('HTTP(S)_PROXY not set; outgoing requests will not use a proxy')
 
 if (!parsed.DEMO_MODE) {
   if (parsed.AUTH_PROVIDER === 'local' && !parsed.JWT_SECRET)
