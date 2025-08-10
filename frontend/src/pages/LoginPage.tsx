@@ -1,17 +1,10 @@
-import { useEffect } from "react"
-import { msalInit, ensureSignedIn } from "../auth/msalInit"
+import { useEffect } from 'react'
+import { signIn } from '../auth'
 
 export default function LoginPage() {
   useEffect(() => {
-    let alive = true
-    ;(async () => {
-      await msalInit()
-      if (!alive) return
-      await ensureSignedIn()
-    })()
-    return () => {
-      alive = false
-    }
+    signIn()
   }, [])
   return <div style={{ padding: 24 }}>Signing you in…</div>
 }
+
