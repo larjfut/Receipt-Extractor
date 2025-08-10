@@ -1,7 +1,8 @@
+// frontend/src/auth/msal.ts
 import { PublicClientApplication, LogLevel } from '@azure/msal-browser'
 
-const tenant = import.meta.env.VITE_MSAL_TENANT_ID ?? ''
-const clientId = import.meta.env.VITE_MSAL_CLIENT_ID ?? ''
+const tenant = import.meta.env.VITE_MSAL_TENANT_ID || ''
+const clientId = import.meta.env.VITE_MSAL_CLIENT_ID || ''
 const redirectUri = import.meta.env.VITE_MSAL_REDIRECT_URI || window.location.origin
 
 export const msalConfig = {
@@ -23,13 +24,10 @@ export const loginRequest = {
   ]
 }
 
-// Debug surface for staging
+// Optional preview debug
 ;(window as any).debugAuth = {
   env: { tenant, clientId, redirectUri, mode: import.meta.env.MODE },
   cfg: msalConfig,
   accounts: () => msalInstance.getAllAccounts(),
   reset: () => { localStorage.clear(); sessionStorage.clear(); location.reload() }
 }
-
-import { getToken, callApi } from './auth'
-;(window as any).debugApi = { getToken, callApi }
