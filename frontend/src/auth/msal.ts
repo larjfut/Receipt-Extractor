@@ -1,47 +1,21 @@
-import { PublicClientApplication, InteractionRequiredAuthError } from '@azure/msal-browser'
-import { msalConfig } from './msalConfig'
+import { PublicClientApplication, LogLevel } from '@azure/msal-browser'
 
-export const msalApp = new PublicClientApplication(msalConfig)
-
-export async function ensureSignedIn(scopes = ['openid', 'profile', 'email']) {
-  await msalApp.initialize()
-  let account = msalApp.getActiveAccount() ?? msalApp.getAllAccounts()[0]
-  if (account) msalApp.setActiveAccount(account)
-
-  try {
-    if (account) {
-      await msalApp.acquireTokenSilent({ account, scopes })
-      return { status: 'silent-ok', account: msalApp.getActiveAccount() }
-    }
-    await msalApp.ssoSilent({
-      loginHint: localStorage.getItem('lastLoginHint') || undefined,
-      domainHint: 'organizations',
-      scopes
-    })
-    account = msalApp.getAllAccounts()[0]
-    if (account) {
-      msalApp.setActiveAccount(account)
-      return { status: 'sso-ok', account }
-    }
-  } catch (e) {
-  }
-
-  try {
-    await msalApp.loginRedirect({
-      prompt: 'select_account',
-      domainHint: 'organizations',
-      scopes
-    })
-    return { status: 'redirecting' }
-  } catch (e) {
-    if (e instanceof InteractionRequiredAuthError) {
-      await msalApp.loginRedirect({ prompt: 'select_account', domainHint: 'organizations', scopes })
-    }
-    throw e
-  }
+export const msalConfig = {
+  auth: {
+    clientId: import.meta.env.VITE_MSAL_CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${import.meta.env.VITE_MSAL_TENANT_ID}`,
+    redirectUri: import.meta.env.VITE_MSAL_REDIRECT_URI
+  },
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false },
+  system: { loggerOptions: { logLevel: LogLevel.Warning } }
 }
 
-export function onAuthSuccess() {
-  const acct = msalApp.getActiveAccount()
-  if (acct?.username) localStorage.setItem('lastLoginHint', acct.username)
+export const msalInstance = new PublicClientApplication(msalConfig)
+
+export const loginRequest = {
+  scopes: [
+    'api://261b67cf-259a-438f-a6ab-caef704948d2/access_as_user',
+    'User.Read'
+  ]
 }
+
