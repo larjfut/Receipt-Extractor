@@ -139,6 +139,8 @@ VITE_API_BASE_URL=https://backend.example.com/api
 Redirect URIs for the Azure AD app must include both your deployed origin (e.g. Vercel) and `http://localhost` for local development. Authentication uses the Authorization Code flow with PKCE via MSAL; no implicit grant is required.
 The frontend reads `VITE_MSAL_CLIENT_ID`, `VITE_MSAL_TENANT_ID` and `VITE_MSAL_REDIRECT_URI` to configure the MSAL client.
 
+MSAL relies on a hidden iframe to complete sign-in. If the app is embedded in an iframe, avoid sandboxing or drop the combination of `allow-scripts` and `allow-same-origin` so the iframe can communicate with the parent. Serving the app at the top level is recommended.
+
 ## Running in production
 
 For production builds run `npm run build` in the `frontend` directory to generate a static build in `frontend/dist`. You can then serve this folder through your preferred HTTP server (Nginx, Express, etc.). The backend can be deployed to any Node‑capable environment; just remember to set the environment variables described above.
