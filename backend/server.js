@@ -70,6 +70,11 @@ function validate(value, rule) {
 // Initialize Express
 const app = express()
 app.use(cookieParser())
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self'")
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN')
+  next()
+})
 const MAX_FILES = 5
 const upload = multer({
   storage: multer.memoryStorage(),
