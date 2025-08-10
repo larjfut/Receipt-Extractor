@@ -4,9 +4,17 @@ export async function signIn() {
   await msalInstance.handleRedirectPromise()
   const accounts = msalInstance.getAllAccounts()
   if (accounts.length === 0) {
-    msalInstance.loginRedirect(loginRequest)
+    await msalInstance.loginRedirect(loginRequest)
   } else {
     msalInstance.setActiveAccount(accounts[0])
+    try {
+      await msalInstance.acquireTokenSilent({
+        ...loginRequest,
+        account: accounts[0],
+      })
+    } catch {
+      await msalInstance.loginRedirect(loginRequest)
+    }
   }
 }
 
@@ -19,7 +27,7 @@ export async function getToken() {
   try {
     const result = await msalInstance.acquireTokenSilent({
       ...loginRequest,
-      account
+      account,
     })
     return result.accessToken
   } catch (e) {
@@ -34,10 +42,9 @@ export async function callApi(path: string, options: RequestInit = {}) {
     ...options,
     headers: {
       ...(options.headers || {}),
-      Authorization: `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   })
   if (!resp.ok) throw new Error(`Request failed with status ${resp.status}`)
   return resp.json()
 }
-
