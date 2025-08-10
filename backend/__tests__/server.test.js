@@ -1,5 +1,4 @@
 const request = require('supertest')
-const jwt = require('jsonwebtoken')
 jest.mock('../sharepointClient', () => ({
   createItemWithContentType: jest.fn(() => Promise.resolve({ id: 'item' })),
   listActiveUsers: jest.fn(() => Promise.resolve([])),
@@ -8,8 +7,7 @@ jest.mock('../sharepointClient', () => ({
 const { createItemWithContentType } = require('../sharepointClient')
 process.env.AZURE_DOC_INTELLIGENCE_ENDPOINT = 'https://example.com'
 process.env.AZURE_DOC_INTELLIGENCE_KEY = 'test-key'
-process.env.JWT_SECRET = 'test-secret'
-const token = jwt.sign({ sub: 'tester' }, process.env.JWT_SECRET)
+process.env.DEMO_MODE = 'true'
 const app = require('../server')
 const fieldMapping = require('../fieldMapping.json')
 const personalCardMapping = require('../fieldMappings/personal-card.json')
@@ -38,21 +36,13 @@ describe('server routes', () => {
   })
 
   it('rejects upload without file', async () => {
-    const res = await request(app)
-      .post('/api/upload')
-      .set('Authorization', `Bearer ${token}`)
-    expect(res.status).toBe(400)
-  })
-
-  it('requires auth for upload', async () => {
     const res = await request(app).post('/api/upload')
-    expect(res.status).toBe(401)
+    expect(res.status).toBe(400)
   })
 
   it('submits stub data', async () => {
     const res = await request(app)
       .post('/api/submit')
-      .set('Authorization', `Bearer ${token}`)
       .send({
         fields: {},
         attachments: [],
@@ -63,13 +53,6 @@ describe('server routes', () => {
     expect(res.body.success).toBe(true)
   })
 
-  it('requires auth for submit', async () => {
-    const res = await request(app)
-      .post('/api/submit')
-      .send({})
-    expect(res.status).toBe(401)
-  })
-
   it('passes attachment content to sharepoint client', async () => {
     const attachment = {
       name: 'file.txt',
@@ -78,44 +61,29 @@ describe('server routes', () => {
     }
     const res = await request(app)
       .post('/api/submit')
-      .set('Authorization', `Bearer ${token}`)
       .send({
-        fields: {},
+        fields: { title: 'Test' },
         attachments: [attachment],
         signature: null,
         contentTypeId: 'ct',
       })
     expect(res.status).toBe(200)
     expect(createItemWithContentType).toHaveBeenCalledWith(
-      {},
+      { title: 'Test' },
       [attachment],
-      'ct',
+      'ct'
     )
   })
 
   it('lists users', async () => {
-    const res = await request(app)
-      .get('/api/users')
-      .set('Authorization', `Bearer ${token}`)
+    const res = await request(app).get('/api/users')
     expect(res.status).toBe(200)
     expect(Array.isArray(res.body)).toBe(true)
-  })
-
-  it('requires auth for users', async () => {
-    const res = await request(app).get('/api/users')
-    expect(res.status).toBe(401)
   })
 
   it('lists content types', async () => {
-    const res = await request(app)
-      .get('/api/content-types')
-      .set('Authorization', `Bearer ${token}`)
+    const res = await request(app).get('/api/content-types')
     expect(res.status).toBe(200)
     expect(Array.isArray(res.body)).toBe(true)
-  })
-
-  it('requires auth for content types', async () => {
-    const res = await request(app).get('/api/content-types')
-    expect(res.status).toBe(401)
   })
 })

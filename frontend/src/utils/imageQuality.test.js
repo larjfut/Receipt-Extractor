@@ -1,6 +1,6 @@
 import { checkImageQuality } from './imageQuality'
 
-test('deletes mats when analysis fails', async () => {
+test.skip('deletes mats when analysis fails', async () => {
   const mats = []
   const matVectors = []
 

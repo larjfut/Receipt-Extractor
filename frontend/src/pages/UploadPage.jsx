@@ -9,7 +9,12 @@ import { normalizeKeys } from "../utils/normalizeKeys";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 export default function UploadPage() {
-  const { receipt, setReceipt, contentTypes, setContentTypes } = useContext(ReceiptContext);
+  const {
+    receipt,
+    setReceipt,
+    contentTypes = [],
+    setContentTypes = () => {},
+  } = useContext(ReceiptContext);
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);

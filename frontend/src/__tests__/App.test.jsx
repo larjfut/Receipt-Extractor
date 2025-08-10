@@ -1,7 +1,10 @@
 import "@testing-library/jest-dom"
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import App from '../App.tsx'
+
+jest.mock('../components/Header', () => () => <div />)
+
+import App from '../App.jsx'
 
 test('shows home page by default', () => {
   render(
