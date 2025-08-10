@@ -127,11 +127,11 @@ DEBUG_ENV=true node test-env.js
 
 ### API base URL
 
-The frontend looks for `VITE_API_BASE_URL` to know where the backend is running. Copy `frontend/.env.example` to `frontend/.env` and set the value as needed. When the variable is not set it defaults to `/api`.
+The frontend looks for `VITE_API_BASE_URL` to know where the backend is running. Copy `frontend/.env.example` to `frontend/.env` and set the value as needed. When the variable is not set it defaults to `/api`, but in production it should point to the dedicated backend service.
 
 ```bash
 # frontend/.env
-VITE_API_BASE_URL=http://localhost:5000/api
+VITE_API_BASE_URL=https://backend.example.com/api
 ```
 
 ### Authentication
