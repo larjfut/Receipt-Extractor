@@ -56,9 +56,6 @@ export default function FileUpload({ onFileSelected }) {
         } else if (quality.blurVariance < 100) {
           status = 'unreadable'
           reason = QUALITY_MESSAGES.blur
-        } else if (quality.ocrConfidence < 60) {
-          status = 'unreadable'
-          reason = QUALITY_MESSAGES.ocr
         }
       }
       return { status, reason }

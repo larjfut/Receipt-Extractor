@@ -15,8 +15,7 @@
     "dev:msal": "DEMO_MODE=false AUTH_PROVIDER=msal VITE_DEMO_MODE=false VITE_AUTH_PROVIDER=msal npm-run-all --parallel start:backend start:frontend"
   },
   "dependencies": {
-    "dotenv": "^17.2.1",
-    "tus-js-client": "3.0.0"
+    "dotenv": "^17.2.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.45.0",

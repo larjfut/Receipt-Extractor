@@ -1,4 +1,5 @@
 require('dotenv').config()
+require('isomorphic-fetch')
 
 const config = require('./src/config')
 const express = require('express')

@@ -10,24 +10,6 @@ const waitForOpenCV = (timeout = 5000) =>
     check()
   })
 
-const runOcr = imageElement =>
-  new Promise((resolve, reject) => {
-    const worker = new Worker(
-      new URL('./ocrWorker.js', import.meta.url),
-      { type: 'module' }
-    )
-    worker.onmessage = ({ data }) => {
-      worker.terminate()
-      if (data.error) reject(new Error(data.error))
-      else resolve(data.confidence)
-    }
-    worker.onerror = err => {
-      worker.terminate()
-      reject(err)
-    }
-    worker.postMessage({ image: imageElement })
-  })
-
 export const checkImageQuality = async imageElement => {
   let mat, gray, laplacian, mean, stddev, edges, contours, hierarchy
   try {
@@ -67,12 +49,9 @@ export const checkImageQuality = async imageElement => {
       }
     }
 
-    const confidence = await runOcr(imageElement)
-
     return {
       blurVariance: variance,
       hasFourEdges,
-      ocrConfidence: confidence
     }
   } catch (error) {
     console.error('Error checking image quality:', error)
