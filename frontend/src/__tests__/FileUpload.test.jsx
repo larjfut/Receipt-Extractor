@@ -27,7 +27,6 @@ beforeEach(() => {
     Promise.resolve({
       blurVariance: 200,
       hasFourEdges: true,
-      ocrConfidence: 90,
     })
   )
   global.URL.createObjectURL = jest.fn(() => 'blob:mock')
@@ -55,7 +54,7 @@ test('calls onFileSelected with array when a file is chosen', async () => {
     expect(handle).toHaveBeenCalledWith([
       {
         file,
-        quality: { blurVariance: 200, hasFourEdges: true, ocrConfidence: 90 },
+        quality: { blurVariance: 200, hasFourEdges: true },
       },
     ])
   )
@@ -76,7 +75,7 @@ test('calls onFileSelected with array when a photo is taken', async () => {
     expect(handle).toHaveBeenCalledWith([
       {
         file,
-        quality: { blurVariance: 200, hasFourEdges: true, ocrConfidence: 90 },
+        quality: { blurVariance: 200, hasFourEdges: true },
       },
     ])
   )
@@ -141,7 +140,6 @@ test('shows unreadable status with reason', async () => {
   checkImageQuality.mockResolvedValueOnce({
     blurVariance: 10,
     hasFourEdges: true,
-    ocrConfidence: 90,
   })
   const user = userEvent.setup()
   const { container, getByTitle } = render(

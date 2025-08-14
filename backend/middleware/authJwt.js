@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken')
-const fetch = require('node-fetch')
 
 let jwks
 async function getKey(kid) {

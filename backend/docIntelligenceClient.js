@@ -1,4 +1,3 @@
-const fetch = require('node-fetch')
 const config = require('./src/config')
 
 const endpoint = config.AZURE_DOC_INTELLIGENCE_ENDPOINT

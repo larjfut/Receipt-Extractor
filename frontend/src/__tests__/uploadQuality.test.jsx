@@ -36,7 +36,7 @@ beforeEach(() => {
 })
 
 test('rejects blurry image', async () => {
-  checkImageQuality.mockResolvedValue({ blurVariance: 10, hasFourEdges: true, ocrConfidence: 90 })
+  checkImageQuality.mockResolvedValue({ blurVariance: 10, hasFourEdges: true })
   const { container } = renderPage()
   const file = new File(['blur'], 'blur.jpg', { type: 'image/jpeg' })
   await act(async () => {
@@ -54,7 +54,7 @@ test('rejects blurry image', async () => {
 })
 
 test('rejects image missing edges', async () => {
-  checkImageQuality.mockResolvedValue({ blurVariance: 200, hasFourEdges: false, ocrConfidence: 90 })
+  checkImageQuality.mockResolvedValue({ blurVariance: 200, hasFourEdges: false })
   const { container } = renderPage()
   const file = new File(['edge'], 'edge.jpg', { type: 'image/jpeg' })
   await act(async () => {
@@ -74,28 +74,10 @@ test('rejects image missing edges', async () => {
   expect(axios.post).not.toHaveBeenCalled()
 })
 
-test('rejects image with low OCR confidence', async () => {
-  checkImageQuality.mockResolvedValue({ blurVariance: 200, hasFourEdges: true, ocrConfidence: 20 })
-  const { container } = renderPage()
-  const file = new File(['ocr'], 'ocr.jpg', { type: 'image/jpeg' })
-  await act(async () => {
-    fireEvent.change(
-      container.querySelector('input[accept="image/*,application/pdf"]'),
-      {
-        target: { files: [file] }
-      }
-    )
-  })
-  await screen.findByText(QUALITY_MESSAGES.ocr)
-  expect(screen.queryByAltText('ready-0')).not.toBeInTheDocument()
-  expect(axios.post).not.toHaveBeenCalled()
-})
-
 test('shows attachments ready for submit when quality passes', async () => {
   checkImageQuality.mockResolvedValue({
     blurVariance: 200,
     hasFourEdges: true,
-    ocrConfidence: 90,
   })
   const { container } = renderPage()
   const file = new File(['good'], 'good.jpg', { type: 'image/jpeg' })
